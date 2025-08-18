@@ -1,0 +1,23 @@
+{
+  "name": "loafy",
+  "version": "1.0.0--alpha.1",
+  "description": "Build your full-stack project easier and faster",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc -w"
+  },
+  "bin": "./dist/index.js",
+  "type": "module",
+  "author": "",
+  "dependencies": {
+    "commander": "^14.0.0",
+    "conf": "^14.0.0",
+    "consola": "^3.4.2",
+    "update-check": "^1.5.4"
+  },
+  "devDependencies": {
+    "@types/conf": "^3.0.3",
+    "@types/node": "^20.19.11",
+    "typescript": "^5.9.2"
+  }
+}
