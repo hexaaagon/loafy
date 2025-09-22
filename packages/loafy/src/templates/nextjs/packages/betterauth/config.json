@@ -1,0 +1,10 @@
+{
+  "id": "nextjs-betterauth",
+  "title": "Better Auth",
+  "description": "Modern authentication library with TypeScript support and multiple providers",
+  "category": "authentication",
+  "ready": true,
+  "conflict": ["nextjs-supabase-auth"],
+  "needed": ["nextjs-drizzle-postgres", "nextjs-drizzle-supabase"],
+  "version": "0.1.0"
+}

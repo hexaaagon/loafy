@@ -1,0 +1,26 @@
+[
+  {
+    "id": "authentication",
+    "title": "Authentication",
+    "description": "User authentication and authorization solutions",
+    "order": 1
+  },
+  {
+    "id": "database",
+    "title": "Database & ORM",
+    "description": "Database connections and ORM solutions",
+    "order": 2
+  },
+  {
+    "id": "backend",
+    "title": "Backend Services",
+    "description": "Backend as a Service and API solutions",
+    "order": 3
+  },
+  {
+    "id": "extras",
+    "title": "Extras",
+    "description": "Additional utilities and integrations",
+    "order": 4
+  }
+]

@@ -1,0 +1,10 @@
+{
+  "id": "nextjs-supabase",
+  "title": "Supabase",
+  "description": "Open source Firebase alternative with authentication, database, and real-time subscriptions",
+  "category": "database",
+  "ready": true,
+  "conflict": ["nextjs-betterauth"],
+  "needed": [],
+  "version": "0.1.0"
+}

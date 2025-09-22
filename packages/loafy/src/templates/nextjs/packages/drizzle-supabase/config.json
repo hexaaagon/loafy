@@ -1,0 +1,10 @@
+{
+  "id": "nextjs-drizzle-supabase",
+  "title": "Drizzle ORM + Supabase",
+  "description": "Type-safe SQL database toolkit with Supabase PostgreSQL integration",
+  "category": "database",
+  "ready": true,
+  "conflict": ["nextjs-drizzle-postgres", "nextjs-supabase"],
+  "needed": [],
+  "version": "0.1.0"
+}

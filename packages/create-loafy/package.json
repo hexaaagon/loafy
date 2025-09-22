@@ -1,12 +1,40 @@
 {
   "name": "create-loafy",
-  "version": "1.0.0",
-  "description": "",
+  "version": "1.0.0--alpha.1",
+  "description": "Create Loafy apps with one command",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "bin": {
+    "create-loafy": "./index.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
+  "scripts": {
+    "test": "node index.js --help"
+  },
+  "keywords": [
+    "loafy",
+    "create-loafy",
+    "cli",
+    "scaffolding",
+    "nextjs",
+    "fullstack",
+    "template",
+    "create-app"
+  ],
+  "author": "hexaaagon",
+  "license": "ISC",
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "index.js",
+    "README.md"
+  ],
+  "homepage": "https://github.com/hexaaagon/loafy",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hexaaagon/loafy.git",
+    "directory": "packages/create-loafy"
+  },
+  "bugs": {
+    "url": "https://github.com/hexaaagon/loafy/issues"
+  }
 }

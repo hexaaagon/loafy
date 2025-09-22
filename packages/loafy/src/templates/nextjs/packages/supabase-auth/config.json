@@ -1,0 +1,10 @@
+{
+  "id": "nextjs-supabase-auth",
+  "title": "Supabase Auth",
+  "description": "Supabase authentication with database and real-time subscriptions",
+  "category": "authentication",
+  "ready": true,
+  "conflict": ["nextjs-betterauth"],
+  "needed": ["nextjs-supabase", "nextjs-drizzle-supabase"],
+  "version": "0.1.0"
+}
