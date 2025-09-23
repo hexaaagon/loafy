@@ -1,5 +1,14 @@
-import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
-import { join, dirname } from "path";
+import {
+  cpSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  writeFileSync,
+  readdirSync,
+  statSync,
+  renameSync,
+} from "fs";
+import { join, dirname, basename } from "path";
 import { consola } from "consola";
 import type {
   BaseTemplate,
@@ -8,6 +17,7 @@ import type {
   Language,
 } from "../types/template.js";
 import type { PackageManager } from "../helpers/get-pkg-manager.js";
+import { replaceFile } from "./replace-files.js";
 
 interface CreateProjectOptions {
   baseTemplate: BaseTemplate;
@@ -46,6 +56,44 @@ export async function createProject(
   consola.success("Project created successfully!");
 }
 
+/**
+ * Recursively apply file replacements in a directory
+ * @param dirPath - Directory path to scan for files to rename
+ */
+function applyFileReplacements(dirPath: string): void {
+  if (!existsSync(dirPath)) return;
+
+  const items = readdirSync(dirPath);
+
+  for (const item of items) {
+    const itemPath = join(dirPath, item);
+    const itemStat = statSync(itemPath);
+
+    if (itemStat.isDirectory()) {
+      // Recursively process subdirectories
+      applyFileReplacements(itemPath);
+    } else if (itemStat.isFile()) {
+      // Check if this file needs to be renamed
+      const filename = basename(itemPath);
+
+      for (const [sourceFilename, targetFilename] of replaceFile) {
+        if (filename === sourceFilename) {
+          const newPath = join(dirname(itemPath), targetFilename);
+          try {
+            renameSync(itemPath, newPath);
+            consola.debug(`Renamed ${sourceFilename} to ${targetFilename}`);
+          } catch (error) {
+            consola.warn(
+              `Failed to rename ${sourceFilename} to ${targetFilename}: ${error}`
+            );
+          }
+          break; // Only apply the first matching replacement
+        }
+      }
+    }
+  }
+}
+
 async function copyTemplate(
   template: BaseTemplate,
   language: Language,
@@ -67,6 +115,9 @@ async function copyTemplate(
         return !src.endsWith("config.json");
       },
     });
+
+    // Apply file replacements after copying
+    applyFileReplacements(destinationPath);
   } catch (error) {
     throw new Error(`Failed to copy template: ${error}`);
   }
@@ -94,6 +145,9 @@ async function copyPackage(
         return !src.endsWith("config.json");
       },
     });
+
+    // Apply file replacements after copying
+    applyFileReplacements(destinationPath);
   } catch (error) {
     consola.warn(`Failed to copy package ${addon.title}: ${error}`);
   }
