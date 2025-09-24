@@ -46,7 +46,7 @@ export async function createProject(
   }
 
   // Create package.json or update existing one
-  await setupPackageJson(appPath, config);
+  await setupPackageJson(appPath, config, baseTemplate, packageAddons);
 
   // Install dependencies if not skipped
   if (!skipInstall) {
@@ -111,8 +111,8 @@ async function copyTemplate(
     cpSync(sourcePath, destinationPath, {
       recursive: true,
       filter: (src: string) => {
-        // Skip config.json files
-        return !src.endsWith("config.json");
+        // Skip config.json and _package.json files
+        return !src.endsWith("config.json") && !src.endsWith("_package.json");
       },
     });
 
@@ -141,8 +141,8 @@ async function copyPackage(
     cpSync(sourcePath, destinationPath, {
       recursive: true,
       filter: (src: string) => {
-        // Skip config.json files
-        return !src.endsWith("config.json");
+        // Skip config.json and _package.json files
+        return !src.endsWith("config.json") && !src.endsWith("_package.json");
       },
     });
 
@@ -155,7 +155,9 @@ async function copyPackage(
 
 async function setupPackageJson(
   appPath: string,
-  config: ProjectConfig
+  config: ProjectConfig,
+  baseTemplate: BaseTemplate,
+  packageAddons: PackageAddon[]
 ): Promise<void> {
   const packageJsonPath = join(appPath, "package.json");
 
@@ -182,8 +184,194 @@ async function setupPackageJson(
     packageJson.private = true;
   }
 
+  // Initialize package.json sections if they don't exist
+  if (!packageJson.dependencies) packageJson.dependencies = {};
+  if (!packageJson.devDependencies) packageJson.devDependencies = {};
+  if (!packageJson.scripts) packageJson.scripts = {};
+
+  // Merge _package.json from base template if it exists
+  const basePackageJsonPath = join(baseTemplate.path, "_package.json");
+  if (existsSync(basePackageJsonPath)) {
+    await mergePackageJson(packageJson, basePackageJsonPath);
+  }
+
+  // Merge _package.json from each selected package addon
+  for (const addon of packageAddons) {
+    const addonPackageJsonPath = join(addon.path, "_package.json");
+    if (existsSync(addonPackageJsonPath)) {
+      await mergePackageJson(packageJson, addonPackageJsonPath);
+    }
+  }
+
+  // Sort dependencies alphabetically
+  if (
+    packageJson.dependencies &&
+    Object.keys(packageJson.dependencies).length > 0
+  ) {
+    packageJson.dependencies = sortObjectKeys(packageJson.dependencies);
+  }
+
+  if (
+    packageJson.devDependencies &&
+    Object.keys(packageJson.devDependencies).length > 0
+  ) {
+    packageJson.devDependencies = sortObjectKeys(packageJson.devDependencies);
+  }
+
+  if (packageJson.scripts && Object.keys(packageJson.scripts).length > 0) {
+    packageJson.scripts = sortScripts(packageJson.scripts);
+  }
+
   // Write updated package.json
   writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
+}
+
+/**
+ * Merge a _package.json file into the main package.json
+ */
+async function mergePackageJson(
+  targetPackageJson: any,
+  packageJsonPath: string
+): Promise<void> {
+  try {
+    const content = readFileSync(packageJsonPath, "utf-8");
+    const sourcePackageJson = JSON.parse(content);
+
+    // Merge dependencies
+    if (sourcePackageJson.dependencies) {
+      Object.assign(
+        targetPackageJson.dependencies,
+        sourcePackageJson.dependencies
+      );
+    }
+
+    // Merge devDependencies
+    if (sourcePackageJson.devDependencies) {
+      Object.assign(
+        targetPackageJson.devDependencies,
+        sourcePackageJson.devDependencies
+      );
+    }
+
+    // Merge scripts
+    if (sourcePackageJson.scripts) {
+      Object.assign(targetPackageJson.scripts, sourcePackageJson.scripts);
+    }
+
+    // Merge other fields (excluding name, version, description, license which should come from template)
+    const excludedFields = [
+      "name",
+      "version",
+      "description",
+      "license",
+      "dependencies",
+      "devDependencies",
+      "scripts",
+    ];
+
+    for (const [key, value] of Object.entries(sourcePackageJson)) {
+      if (!excludedFields.includes(key)) {
+        if (
+          typeof value === "object" &&
+          value !== null &&
+          !Array.isArray(value)
+        ) {
+          // For objects, merge them
+          if (!targetPackageJson[key]) targetPackageJson[key] = {};
+          Object.assign(targetPackageJson[key], value);
+        } else {
+          // For primitives and arrays, overwrite
+          targetPackageJson[key] = value;
+        }
+      }
+    }
+  } catch (error) {
+    consola.warn(
+      `Failed to merge package.json from ${packageJsonPath}: ${error}`
+    );
+  }
+}
+
+/**
+ * Sort object keys alphabetically
+ */
+function sortObjectKeys(obj: Record<string, any>): Record<string, any> {
+  const sorted: Record<string, any> = {};
+  const keys = Object.keys(obj).sort();
+
+  for (const key of keys) {
+    sorted[key] = obj[key];
+  }
+
+  return sorted;
+}
+
+/**
+ * Sort scripts in a logical order: general scripts first, then prefixed scripts grouped together
+ */
+function sortScripts(scripts: Record<string, any>): Record<string, any> {
+  const sorted: Record<string, any> = {};
+  const keys = Object.keys(scripts);
+
+  // Define order for common general scripts
+  const generalScriptOrder = [
+    "build",
+    "dev",
+    "start",
+    "format",
+    "lint",
+    "test",
+    "typecheck",
+  ];
+
+  // Separate general scripts and prefixed scripts
+  const generalScripts: string[] = [];
+  const prefixedScripts: Record<string, string[]> = {};
+
+  for (const key of keys) {
+    if (generalScriptOrder.includes(key)) {
+      generalScripts.push(key);
+    } else {
+      const colonIndex = key.indexOf(":");
+      if (colonIndex > 0) {
+        const prefix = key.substring(0, colonIndex);
+        if (!prefixedScripts[prefix]) {
+          prefixedScripts[prefix] = [];
+        }
+        prefixedScripts[prefix].push(key);
+      } else {
+        // Other general scripts not in the predefined order
+        generalScripts.push(key);
+      }
+    }
+  }
+
+  // Add general scripts in the predefined order
+  for (const script of generalScriptOrder) {
+    if (generalScripts.includes(script)) {
+      sorted[script] = scripts[script];
+    }
+  }
+
+  // Add other general scripts alphabetically
+  const otherGeneralScripts = generalScripts
+    .filter((script) => !generalScriptOrder.includes(script))
+    .sort();
+
+  for (const script of otherGeneralScripts) {
+    sorted[script] = scripts[script];
+  }
+
+  // Add prefixed scripts grouped by prefix
+  const sortedPrefixes = Object.keys(prefixedScripts).sort();
+  for (const prefix of sortedPrefixes) {
+    const prefixScripts = prefixedScripts[prefix].sort();
+    for (const script of prefixScripts) {
+      sorted[script] = scripts[script];
+    }
+  }
+
+  return sorted;
 }
 
 async function installDependencies(

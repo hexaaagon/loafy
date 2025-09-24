@@ -1,20 +1,20 @@
 [
   {
+    "id": "linting-formatting",
+    "title": "Linting & Formatting",
+    "description": "Code quality and style enforcement tools",
+    "order": 1
+  },
+  {
     "id": "authentication",
     "title": "Authentication",
     "description": "User authentication and authorization solutions",
-    "order": 1
+    "order": 2
   },
   {
     "id": "database",
     "title": "Database & ORM",
     "description": "Database connections and ORM solutions",
-    "order": 2
-  },
-  {
-    "id": "backend",
-    "title": "Backend Services",
-    "description": "Backend as a Service and API solutions",
     "order": 3
   },
   {

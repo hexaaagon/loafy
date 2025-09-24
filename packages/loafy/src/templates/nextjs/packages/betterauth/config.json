@@ -5,6 +5,6 @@
   "category": "authentication",
   "ready": true,
   "conflict": ["nextjs-supabase-auth"],
-  "needed": ["nextjs-drizzle-postgres", "nextjs-drizzle-supabase"],
+  "needed": ["database"],
   "version": "0.1.0"
 }

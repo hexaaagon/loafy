@@ -285,7 +285,7 @@ async function selectPackageManager(
     name: "packageManager",
     message: "Which package manager would you like to use?",
     choices,
-    initial: installed.findIndex((pm) => pm === detected),
+    initial: choices.findIndex((choice) => choice.value === detected),
   });
 
   return packageManager || detected;
@@ -334,7 +334,19 @@ async function selectPackages(
     selectedIds: string[]
   ): boolean => {
     if (!pkg.needed || pkg.needed.length === 0) return true;
-    return pkg.needed.some((neededId) => selectedIds.includes(neededId));
+
+    // Get the categories of selected packages
+    const selectedCategories = selectedIds
+      .map((id) => {
+        const selectedPkg = packageMap.get(id);
+        return selectedPkg?.category;
+      })
+      .filter(Boolean);
+
+    // Check if any needed category has been selected
+    return pkg.needed.some((neededCategory) =>
+      selectedCategories.includes(neededCategory)
+    );
   };
 
   // Function to check if a package conflicts with any selected packages
@@ -383,27 +395,12 @@ async function selectPackages(
     }
 
     if (categoryId === "extras") {
-      // Extras category: multiselect
       const choices = availableCategoryPackages.map((pkg) => ({
         title: pkg.title,
         description: pkg.description,
         value: pkg.id,
-        disabled: false,
+        selected: false, // Ensure nothing is pre-selected
       }));
-
-      choices.push({
-        title: " ",
-        description: "",
-        value: "__SEPARATOR__",
-        disabled: true,
-      });
-
-      choices.push({
-        title: "⏭️  Skip this category",
-        description: `Don't add any ${category.title.toLowerCase()} packages`,
-        value: "__SKIP__",
-        disabled: false,
-      });
 
       const { selection } = await prompts({
         onState: onPromptState,
@@ -413,13 +410,11 @@ async function selectPackages(
         choices,
         instructions: false,
         hint: "Space to select, Enter to confirm",
+        min: 0, // Allow no selection
       });
 
       if (selection && selection.length > 0) {
-        const validSelections = selection.filter(
-          (id: string) => id !== "__SKIP__" && id !== "__SEPARATOR__"
-        );
-        allSelectedPackages.push(...validSelections);
+        allSelectedPackages.push(...selection);
       }
     } else {
       // Other categories: single select

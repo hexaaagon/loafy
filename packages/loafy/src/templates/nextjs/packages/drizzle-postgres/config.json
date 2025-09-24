@@ -4,11 +4,7 @@
   "description": "Type-safe SQL database toolkit with PostgreSQL support",
   "category": "database",
   "ready": true,
-  "conflict": [
-    "nextjs-drizzle-supabase",
-    "nextjs-supabase",
-    "nextjs-supabase-auth"
-  ],
+  "conflict": ["nextjs-supabase-auth"],
   "needed": [],
   "version": "0.1.0"
 }

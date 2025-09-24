@@ -4,7 +4,7 @@
   "description": "Supabase authentication with database and real-time subscriptions",
   "category": "authentication",
   "ready": true,
-  "conflict": ["nextjs-betterauth"],
-  "needed": ["nextjs-supabase", "nextjs-drizzle-supabase"],
+  "conflict": [],
+  "needed": ["database"],
   "version": "0.1.0"
 }
