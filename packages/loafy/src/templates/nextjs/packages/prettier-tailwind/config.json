@@ -3,7 +3,7 @@
   "title": "Prettier Tailwind CSS Plugin",
   "description": "Prettier plugin for sorting Tailwind CSS classes",
   "category": "extras",
-  "ready": true,
+  "ready": false,
   "conflict": ["nextjs-biome"],
   "needed": [],
   "version": "0.1.0"

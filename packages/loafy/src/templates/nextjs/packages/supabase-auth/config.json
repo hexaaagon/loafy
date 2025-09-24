@@ -3,7 +3,7 @@
   "title": "Supabase Auth",
   "description": "Supabase authentication with database and real-time subscriptions",
   "category": "authentication",
-  "ready": true,
+  "ready": false,
   "conflict": [],
   "needed": ["database"],
   "version": "0.1.0"

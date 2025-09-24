@@ -3,7 +3,7 @@
   "title": "Drizzle ORM + PostgreSQL",
   "description": "Type-safe SQL database toolkit with PostgreSQL support",
   "category": "database",
-  "ready": true,
+  "ready": false,
   "conflict": ["nextjs-supabase-auth"],
   "needed": [],
   "version": "0.1.0"

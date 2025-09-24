@@ -3,7 +3,7 @@
   "title": "Drizzle ORM + Supabase",
   "description": "Type-safe SQL database toolkit with Supabase PostgreSQL integration",
   "category": "database",
-  "ready": true,
+  "ready": false,
   "conflict": [],
   "needed": [],
   "version": "0.1.0"

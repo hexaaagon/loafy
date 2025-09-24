@@ -3,7 +3,7 @@
   "title": "Biome + Tailwind CSS formatter",
   "description": "Biome is a fast, modern tool for linting and formatting JavaScript, TypeScript, and more.",
   "category": "linting-formatting",
-  "ready": true,
+  "ready": false,
   "conflict": [],
   "needed": [],
   "version": "0.1.0"
