@@ -86,8 +86,16 @@ export async function initProject(options: {
       process.exit(1);
     }
 
+    // Resolve the project path and extract the directory name
+    // This handles cases like ".", "..", "../.." by using the actual directory name
     const appPath = resolve(projectPath);
     const appName = basename(appPath);
+
+    // Log the resolved project information for clarity
+    if (projectPath !== appName) {
+      consola.info(`Creating project in: ${appPath}`);
+      consola.info(`Project name will be: ${appName}`);
+    }
 
     // Validate project name
     const validation = validateNpmName(appName);
@@ -363,18 +371,28 @@ async function selectPackages(
 
   const allSelectedPackages: string[] = [];
 
-  // Define the specific order of categories
-  const categoryOrder = ["database", "authentication", "backend", "extras"];
+  // Create category order based on the provided categories, sorted by their order property
+  const sortedCategories = categories
+    .slice() // Create a copy to avoid mutating original array
+    .sort((a, b) => (a.order || 999) - (b.order || 999))
+    .map((cat) => cat.id);
 
-  for (const categoryId of categoryOrder) {
+  for (const categoryId of sortedCategories) {
     const category = categories.find((cat) => cat.id === categoryId);
     const categoryPackages = packagesByCategory.get(categoryId) || [];
 
     if (categoryPackages.length === 0 || !category) continue;
 
     // Skip authentication if no database package was selected
-    if (categoryId === "authentication" && allSelectedPackages.length === 0) {
-      continue;
+    if (categoryId === "authentication") {
+      const hasDatabasePackage = allSelectedPackages.some((selectedId) => {
+        const selectedPkg = packageMap.get(selectedId);
+        return selectedPkg?.category === "database";
+      });
+
+      if (!hasDatabasePackage) {
+        continue;
+      }
     }
 
     // Sort packages in category A-Z
@@ -424,13 +442,6 @@ async function selectPackages(
         value: pkg.id,
         disabled: false,
       }));
-
-      choices.push({
-        title: " ",
-        description: "",
-        value: "__SEPARATOR__",
-        disabled: true,
-      });
 
       choices.push({
         title: "⏭️  Skip this category",

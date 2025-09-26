@@ -25,6 +25,68 @@ interface CreateProjectOptions {
   skipInstall: boolean;
 }
 
+/**
+ * Replace template placeholders in file content
+ * @param content - File content with placeholders
+ * @param config - Project configuration
+ * @returns Content with placeholders replaced
+ */
+function replaceTemplatePlaceholders(
+  content: string,
+  config: ProjectConfig
+): string {
+  return content
+    .replace(/\{\{config\.projectName\}\}/g, config.name)
+    .replace(/\{\{config\.name\}\}/g, config.name);
+}
+
+/**
+ * Process template files recursively and replace placeholders
+ * @param dirPath - Directory path to scan for template files
+ * @param config - Project configuration
+ */
+function processTemplateFiles(dirPath: string, config: ProjectConfig): void {
+  if (!existsSync(dirPath)) return;
+
+  const items = readdirSync(dirPath);
+
+  for (const item of items) {
+    const itemPath = join(dirPath, item);
+    const itemStat = statSync(itemPath);
+
+    if (itemStat.isDirectory()) {
+      // Recursively process subdirectories
+      processTemplateFiles(itemPath, config);
+    } else if (itemStat.isFile()) {
+      // Process files that might contain templates
+      const filename = basename(itemPath);
+
+      // Only process text files that might contain templates
+      if (
+        filename.endsWith(".json") ||
+        filename.endsWith(".md") ||
+        filename.endsWith(".txt") ||
+        filename.endsWith(".yml") ||
+        filename.endsWith(".yaml") ||
+        filename.endsWith(".toml")
+      ) {
+        try {
+          const content = readFileSync(itemPath, "utf-8");
+
+          // Check if file contains template placeholders
+          if (content.includes("{{config.")) {
+            const updatedContent = replaceTemplatePlaceholders(content, config);
+            writeFileSync(itemPath, updatedContent, "utf-8");
+            consola.debug(`Processed template placeholders in: ${filename}`);
+          }
+        } catch (error) {
+          consola.warn(`Failed to process template file ${filename}: ${error}`);
+        }
+      }
+    }
+  }
+}
+
 export async function createProject(
   appPath: string,
   config: ProjectConfig,
@@ -44,6 +106,9 @@ export async function createProject(
   for (const addon of packageAddons) {
     await copyPackage(addon, config.language, appPath);
   }
+
+  // Process template placeholders in all copied files
+  processTemplateFiles(appPath, config);
 
   // Create package.json or update existing one
   await setupPackageJson(appPath, config, baseTemplate, packageAddons);
@@ -166,14 +231,18 @@ async function setupPackageJson(
   // Read existing package.json if it exists
   if (existsSync(packageJsonPath)) {
     try {
-      const content = readFileSync(packageJsonPath, "utf-8");
+      let content = readFileSync(packageJsonPath, "utf-8");
+
+      // Replace template placeholders with actual config values
+      content = replaceTemplatePlaceholders(content, config);
+
       packageJson = JSON.parse(content);
     } catch (error) {
       consola.warn("Could not parse existing package.json, creating new one");
     }
   }
 
-  // Update package.json with project name
+  // Update package.json with project name (ensure it's set correctly)
   packageJson.name = config.name;
 
   if (!packageJson.version) {
@@ -190,14 +259,22 @@ async function setupPackageJson(
   if (!packageJson.scripts) packageJson.scripts = {};
 
   // Merge _package.json from base template if it exists
-  const basePackageJsonPath = join(baseTemplate.path, "_package.json");
+  const basePackageJsonPath = join(
+    baseTemplate.path,
+    config.language,
+    "_package.json"
+  );
   if (existsSync(basePackageJsonPath)) {
     await mergePackageJson(packageJson, basePackageJsonPath);
   }
 
   // Merge _package.json from each selected package addon
   for (const addon of packageAddons) {
-    const addonPackageJsonPath = join(addon.path, "_package.json");
+    const addonPackageJsonPath = join(
+      addon.path,
+      config.language,
+      "_package.json"
+    );
     if (existsSync(addonPackageJsonPath)) {
       await mergePackageJson(packageJson, addonPackageJsonPath);
     }
