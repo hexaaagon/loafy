@@ -3,7 +3,7 @@
 
 <div align="middle">
   <picture>
-    <img src=".github/assets/loafy.png" alt="Loafy Logo" height="128" width="128" />
+    <img src="https://raw.githubusercontent.com/hexaaagon/loafy/refs/heads/main/.github/assets/loafy.png" alt="Loafy Logo" height="128" width="128" />
   </picture>
 </div>
 
