@@ -176,8 +176,9 @@ async function copyTemplate(
     cpSync(sourcePath, destinationPath, {
       recursive: true,
       filter: (src: string) => {
+        const fileName = basename(src);
         // Skip config.json and _package.json files
-        return !src.endsWith("config.json") && !src.endsWith("_package.json");
+        return fileName !== "config.json" && fileName !== "_package.json";
       },
     });
 
@@ -206,8 +207,9 @@ async function copyPackage(
     cpSync(sourcePath, destinationPath, {
       recursive: true,
       filter: (src: string) => {
+        const fileName = basename(src);
         // Skip config.json and _package.json files
-        return !src.endsWith("config.json") && !src.endsWith("_package.json");
+        return fileName !== "config.json" && fileName !== "_package.json";
       },
     });
 
