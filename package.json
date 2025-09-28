@@ -6,6 +6,9 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
+    "build:packages": "cd packages/loafy && pnpm run build && cd ../../packages/create-loafy && echo 'No build step for create-loafy'",
+    "build:apps": "cd apps/template-nextjs && pnpm run build && cd ../../apps/website && pnpm run build",
+    "build:all": "pnpm run build:packages && pnpm run build:apps",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",

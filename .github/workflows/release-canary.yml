@@ -1,0 +1,202 @@
+name: Release Canary
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit_limit:
+        description: 'Number of commits to include in release notes'
+        required: false
+        default: '10'
+        type: string
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  release-canary:
+    runs-on: ubuntu-latest
+    # Only run for pre-releases when triggered by release event
+    if: github.event_name == 'workflow_dispatch' || github.event.release.prerelease == true
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for proper version bumping
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+          run_install: false
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            */*/node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Cache build outputs
+        uses: actions/cache@v4
+        with:
+          path: |
+            packages/loafy/dist
+            packages/loafy/tsconfig.tsbuildinfo
+            apps/template-nextjs/.next
+            apps/website/.next
+          key: ${{ runner.os }}-build-${{ hashFiles('packages/loafy/src/**', 'apps/template-nextjs/src/**', 'apps/website/src/**') }}
+          restore-keys: |
+            ${{ runner.os }}-build-
+
+      - name: Build packages
+        run: pnpm run build:all
+
+      - name: Get version from tag (if triggered by release)
+        if: github.event_name == 'release'
+        id: get_version_from_tag
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          echo "NEW_VERSION=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Bump version to canary (if triggered by workflow_dispatch)
+        if: github.event_name == 'workflow_dispatch'
+        id: bump_version
+        run: |
+          cd packages/loafy
+          
+          # Get current version
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "Current version: $CURRENT_VERSION"
+          
+          # Check if current version is already a canary
+          if [[ $CURRENT_VERSION == *"-canary."* ]]; then
+            # Extract base version and canary number
+            BASE_VERSION=$(echo $CURRENT_VERSION | sed 's/-canary\..*$//')
+            CANARY_NUM=$(echo $CURRENT_VERSION | sed 's/.*-canary\.\([0-9]*\)$/\1/')
+            NEW_CANARY_NUM=$((CANARY_NUM + 1))
+            NEW_VERSION="${BASE_VERSION}-canary.${NEW_CANARY_NUM}"
+            echo "Incrementing canary: $CURRENT_VERSION -> $NEW_VERSION"
+          else
+            # Use current version as base for new canary
+            # Remove any pre-release suffixes (like --alpha.1 or -beta.1)
+            BASE_VERSION=$(echo $CURRENT_VERSION | sed 's/--.*$//' | sed 's/-.*$//')
+            NEW_VERSION="${BASE_VERSION}-canary.1"
+            echo "Creating new canary from base: $BASE_VERSION -> $NEW_VERSION"
+          fi
+          
+          echo "New canary version: $NEW_VERSION"
+          
+          # Update package.json files
+          npm version $NEW_VERSION --no-git-tag-version
+          cd ../../packages/create-loafy
+          npm version $NEW_VERSION --no-git-tag-version
+          
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            NEW_VERSION="${{ steps.bump_version.outputs.NEW_VERSION }}"
+            COMMIT_LIMIT="${{ github.event.inputs.commit_limit }}"
+          else
+            NEW_VERSION="${{ steps.get_version_from_tag.outputs.NEW_VERSION }}"
+            COMMIT_LIMIT="10"
+          fi
+          
+          # Get recent commits with PR information
+          COMMITS=$(git log --oneline --decorate --no-merges -n ${COMMIT_LIMIT} --pretty=format:"- %s (%h)" | head -20)
+          
+          # Get merged PRs from recent commits
+          PRS=$(git log --oneline --no-merges -n ${COMMIT_LIMIT} --grep="Merge pull request" --pretty=format:"%s" | head -10 | sed 's/Merge pull request /- PR /g' | sed 's/ from.*//g')
+          
+          # Create release notes
+          cat > release_notes.md << EOF
+          # 🚀 Canary Release v${NEW_VERSION}
+          
+          ## ⚠️ Pre-release Warning
+          This is a canary/pre-release version that may contain experimental features and breaking changes.
+          Use with caution in production environments.
+          
+          ## 📦 Version Info
+          This canary release is based on the latest stable version with incremental canary numbering.
+          
+          ## What's Changed
+          
+          ### Recent Commits
+          ${COMMITS}
+          
+          ### Merged Pull Requests
+          ${PRS}
+          
+          **Full Changelog**: https://github.com/${{ github.repository }}/compare/v${NEW_VERSION}...HEAD
+          EOF
+          
+          echo "RELEASE_NOTES_FILE=release_notes.md" >> $GITHUB_OUTPUT
+
+      - name: Commit version changes (if workflow_dispatch)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add packages/loafy/package.json packages/create-loafy/package.json
+          git commit -m "chore: bump version to canary v${{ steps.bump_version.outputs.NEW_VERSION }}"
+          git push
+
+      - name: Create Git tag (if workflow_dispatch)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          git tag "v${{ steps.bump_version.outputs.NEW_VERSION }}"
+          git push origin "v${{ steps.bump_version.outputs.NEW_VERSION }}"
+
+      - name: Create GitHub Pre-Release (if workflow_dispatch)
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: "v${{ steps.bump_version.outputs.NEW_VERSION }}"
+          release_name: "🚀 Canary Release v${{ steps.bump_version.outputs.NEW_VERSION }}"
+          body_path: ${{ steps.release_notes.outputs.RELEASE_NOTES_FILE }}
+          draft: false
+          prerelease: true
+
+      - name: Publish to npm with canary tag
+        if: github.event_name == 'workflow_dispatch' || github.event_name == 'release'
+        run: |
+          cd packages/loafy
+          npm publish --access public --tag canary
+          cd ../create-loafy
+          npm publish --access public --tag canary
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

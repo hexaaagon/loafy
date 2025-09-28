@@ -8,7 +8,9 @@
     "esModuleInterop": true,
     "skipLibCheck": false,
     "rootDir": "./src",
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "incremental": true,
+    "tsBuildInfoFile": "./tsconfig.tsbuildinfo"
   },
   "include": ["./src/**/*"],
   "exclude": ["dist", "./src/templates/**/*"]
