@@ -2,12 +2,6 @@ name: Release Canary
 
 on:
   workflow_dispatch:
-    inputs:
-      commit_limit:
-        description: 'Number of commits to include in release notes'
-        required: false
-        default: '10'
-        type: string
   release:
     types: [published]
 
@@ -127,38 +121,46 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
             NEW_VERSION="${{ steps.bump_version.outputs.NEW_VERSION }}"
-            COMMIT_LIMIT="${{ github.event.inputs.commit_limit }}"
           else
             NEW_VERSION="${{ steps.get_version_from_tag.outputs.NEW_VERSION }}"
-            COMMIT_LIMIT="10"
           fi
           
-          # Get recent commits with PR information
-          COMMITS=$(git log --oneline --decorate --no-merges -n ${COMMIT_LIMIT} --pretty=format:"- %s (%h)" | head -20)
+          # Get the last stable release tag (non-canary)
+          LAST_STABLE_TAG=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1)
+          echo "Last stable release tag: $LAST_STABLE_TAG"
           
-          # Get merged PRs from recent commits
-          PRS=$(git log --oneline --no-merges -n ${COMMIT_LIMIT} --grep="Merge pull request" --pretty=format:"%s" | head -10 | sed 's/Merge pull request /- PR /g' | sed 's/ from.*//g')
+          # Get commits since last stable release
+          if [ -n "$LAST_STABLE_TAG" ]; then
+            COMMITS=$(git log ${LAST_STABLE_TAG}..HEAD --oneline --no-merges --pretty=format:"- %s")
+          else
+            # Fallback if no tags exist
+            COMMITS=$(git log --oneline --no-merges -n 20 --pretty=format:"- %s")
+          fi
+          
+          # Count commits for summary
+          COMMIT_COUNT=$(echo "$COMMITS" | wc -l)
+          
+          # Get comparison URL
+          if [ -n "$LAST_STABLE_TAG" ]; then
+            PREV_VERSION=${LAST_STABLE_TAG#v}
+            COMPARE_URL="https://github.com/${{ github.repository }}/compare/v${PREV_VERSION}...v${NEW_VERSION}"
+          else
+            COMPARE_URL="https://github.com/${{ github.repository }}/commits/v${NEW_VERSION}"
+          fi
           
           # Create release notes
           cat > release_notes.md << EOF
-          # 🚀 Canary Release v${NEW_VERSION}
-          
           ## ⚠️ Pre-release Warning
           This is a canary/pre-release version that may contain experimental features and breaking changes.
           Use with caution in production environments.
           
-          ## 📦 Version Info
-          This canary release is based on the latest stable version with incremental canary numbering.
-          
           ## What's Changed
           
-          ### Recent Commits
           ${COMMITS}
           
-          ### Merged Pull Requests
-          ${PRS}
+          **${COMMIT_COUNT} commits** since last stable release (${LAST_STABLE_TAG})
           
-          **Full Changelog**: https://github.com/${{ github.repository }}/compare/v${NEW_VERSION}...HEAD
+          **Full Changelog**: ${COMPARE_URL}
           EOF
           
           echo "RELEASE_NOTES_FILE=release_notes.md" >> $GITHUB_OUTPUT
@@ -185,7 +187,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: "v${{ steps.bump_version.outputs.NEW_VERSION }}"
-          release_name: "🚀 Canary Release v${{ steps.bump_version.outputs.NEW_VERSION }}"
+          release_name: "v${{ steps.bump_version.outputs.NEW_VERSION }} (Canary)"
           body_path: ${{ steps.release_notes.outputs.RELEASE_NOTES_FILE }}
           draft: false
           prerelease: true

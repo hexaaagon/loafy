@@ -12,11 +12,6 @@ on:
           - patch  # 0.0.x (bug fixes)
           - minor  # 0.x.0 (new features)
           - major  # x.0.0 (breaking changes)
-      commit_limit:
-        description: 'Number of commits to include in release notes'
-        required: false
-        default: '10'
-        type: string
   release:
     types: [published]
 
@@ -148,31 +143,42 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
             NEW_VERSION="${{ steps.bump_version.outputs.NEW_VERSION }}"
-            COMMIT_LIMIT="${{ github.event.inputs.commit_limit }}"
           else
             NEW_VERSION="${{ steps.get_version_from_tag.outputs.NEW_VERSION }}"
-            COMMIT_LIMIT="10"
           fi
           
-          # Get recent commits with PR information
-          COMMITS=$(git log --oneline --decorate --no-merges -n ${COMMIT_LIMIT} --pretty=format:"- %s (%h)" | head -20)
+          # Get the last release tag
+          LAST_TAG=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1)
+          echo "Last release tag: $LAST_TAG"
           
-          # Get merged PRs from recent commits
-          PRS=$(git log --oneline --no-merges -n ${COMMIT_LIMIT} --grep="Merge pull request" --pretty=format:"%s" | head -10 | sed 's/Merge pull request /- PR /g' | sed 's/ from.*//g')
+          # Get commits since last release
+          if [ -n "$LAST_TAG" ]; then
+            COMMITS=$(git log ${LAST_TAG}..HEAD --oneline --no-merges --pretty=format:"- %s")
+          else
+            # Fallback if no tags exist
+            COMMITS=$(git log --oneline --no-merges -n 20 --pretty=format:"- %s")
+          fi
+          
+          # Count commits for summary
+          COMMIT_COUNT=$(echo "$COMMITS" | wc -l)
+          
+          # Get previous version for comparison
+          if [ -n "$LAST_TAG" ]; then
+            PREV_VERSION=${LAST_TAG#v}
+            COMPARE_URL="https://github.com/${{ github.repository }}/compare/v${PREV_VERSION}...v${NEW_VERSION}"
+          else
+            COMPARE_URL="https://github.com/${{ github.repository }}/commits/v${NEW_VERSION}"
+          fi
           
           # Create release notes
           cat > release_notes.md << EOF
-          # Release v${NEW_VERSION}
-          
           ## What's Changed
           
-          ### Recent Commits
           ${COMMITS}
           
-          ### Merged Pull Requests
-          ${PRS}
+          **${COMMIT_COUNT} commits** since last release
           
-          **Full Changelog**: https://github.com/${{ github.repository }}/compare/v${NEW_VERSION}...HEAD
+          **Full Changelog**: ${COMPARE_URL}
           EOF
           
           echo "RELEASE_NOTES_FILE=release_notes.md" >> $GITHUB_OUTPUT
@@ -199,7 +205,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: "v${{ steps.bump_version.outputs.NEW_VERSION }}"
-          release_name: "Release v${{ steps.bump_version.outputs.NEW_VERSION }}"
+          release_name: "v${{ steps.bump_version.outputs.NEW_VERSION }}"
           body_path: ${{ steps.release_notes.outputs.RELEASE_NOTES_FILE }}
           draft: false
           prerelease: false
