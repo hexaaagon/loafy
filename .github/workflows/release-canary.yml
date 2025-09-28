@@ -78,7 +78,7 @@ jobs:
             ${{ runner.os }}-build-
 
       - name: Build packages
-        run: pnpm run build:all
+        run: pnpm run build
 
       - name: Get version from tag (if triggered by release)
         if: github.event_name == 'release'
