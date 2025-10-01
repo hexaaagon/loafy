@@ -37,7 +37,7 @@
 - [ ] Supabase database integration
 
 **Frameworks**
-- [x] Next.js App Router with TypeScript/~~JavaScript~~ support
+- [x] Next.js App Router with TypeScript/JavaScript support
 - [ ] Expo for React Native development
 - More frameworks coming soon!
 

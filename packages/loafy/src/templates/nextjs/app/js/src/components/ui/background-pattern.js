@@ -1,10 +1,7 @@
 import { cn } from "@/lib/utils";
 
-export function BackgroundPattern({
-  className,
-  style,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
+/** @param {React.HTMLAttributes<HTMLDivElement>} param0 */
+export function BackgroundPattern({ className, style, ...props }) {
   return (
     <div
       className={cn(
