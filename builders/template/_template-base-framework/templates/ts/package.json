@@ -1,0 +1,20 @@
+{
+  "name": "{{config.projectName}}",
+  "version": "0.1.0",
+  "description": "Generated with Loafy CLI",
+  "main": "index.ts",
+  "scripts": {
+    "dev": "# Add development script here",
+    "build": "# Add build script here",
+    "start": "# Add start script here",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "# Add": "framework dependencies here"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0",
+    "# Add": "other development dependencies here"
+  }
+}

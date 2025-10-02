@@ -1,0 +1,23 @@
+{
+  "name": "@loafy/builders-nextjs",
+  "version": "0.1.0",
+  "description": "Next.js application templates for Loafy CLI",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*",
+    "templates/**/*"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "keywords": ["loafy", "nextjs", "template", "builder"],
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "uuid": "^9.0.0"
+  }
+}

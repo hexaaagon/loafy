@@ -1,0 +1,50 @@
+[
+  {
+    "id": "linting-formatting",
+    "title": "Linting & Formatting",
+    "description": "Code quality and style enforcement tools",
+    "order": 1
+  },
+  {
+    "id": "database",
+    "title": "Database & ORM",
+    "description": "Database connections and ORM solutions",
+    "order": 2
+  },
+  {
+    "id": "authentication",
+    "title": "Authentication",
+    "description": "User authentication and authorization solutions",
+    "order": 3
+  },
+  {
+    "id": "state-management",
+    "title": "State Management",
+    "description": "Application state management libraries",
+    "order": 4
+  },
+  {
+    "id": "ui-components",
+    "title": "UI Components",
+    "description": "Component libraries and design systems",
+    "order": 5
+  },
+  {
+    "id": "testing",
+    "title": "Testing",
+    "description": "Testing frameworks and utilities",
+    "order": 6
+  },
+  {
+    "id": "deployment",
+    "title": "Deployment",
+    "description": "Deployment and hosting configurations",
+    "order": 7
+  },
+  {
+    "id": "extras",
+    "title": "Extras",
+    "description": "Additional utilities and integrations",
+    "order": 999
+  }
+]

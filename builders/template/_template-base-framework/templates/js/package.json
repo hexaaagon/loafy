@@ -1,0 +1,17 @@
+{
+  "name": "{{config.projectName}}",
+  "version": "0.1.0",
+  "description": "Generated with Loafy CLI",
+  "main": "index.js",
+  "scripts": {
+    "dev": "# Add development script here",
+    "build": "# Add build script here",
+    "start": "# Add start script here"
+  },
+  "dependencies": {
+    "# Add": "framework dependencies here"
+  },
+  "devDependencies": {
+    "# Add": "development dependencies here"
+  }
+}

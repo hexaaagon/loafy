@@ -1,0 +1,14 @@
+{
+  "_comment": "Package dependencies for TypeScript variant",
+  "dependencies": {
+    "package-specific-lib": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/package-specific-lib": "^1.0.0",
+    "typescript": "^5.0.0"
+  },
+  "scripts": {
+    "package-script": "command for this package",
+    "type-check": "tsc --noEmit"
+  }
+}

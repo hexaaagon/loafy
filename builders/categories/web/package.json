@@ -1,0 +1,20 @@
+{
+  "name": "@loafy/categories-web",
+  "version": "0.1.0", 
+  "description": "Web development categories for Loafy CLI packages",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*",
+    "categories/**/*"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "keywords": ["loafy", "categories", "web", "template"],
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

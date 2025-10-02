@@ -1,8 +1,9 @@
 packages:
   - apps/*
   - packages/*
+  - builders/template/*
+  - builders/packages/**
+  - builders/categories/*
 
 onlyBuiltDependencies:
-  - '@tailwindcss/oxide'
-  - sharp
   - unrs-resolver

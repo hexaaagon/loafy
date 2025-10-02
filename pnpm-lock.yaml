@@ -73,61 +73,6 @@ importers:
         specifier: ^5
         version: 5.9.2
 
-  apps/template-nextjs copy:
-    dependencies:
-      class-variance-authority:
-        specifier: ^0.7.1
-        version: 0.7.1
-      clsx:
-        specifier: ^2.1.1
-        version: 2.1.1
-      lucide-react:
-        specifier: ^0.544.0
-        version: 0.544.0(react@19.1.1)
-      motion:
-        specifier: ^12.23.16
-        version: 12.23.21(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      next:
-        specifier: 15.5.4
-        version: 15.5.4(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      react:
-        specifier: 19.1.1
-        version: 19.1.1
-      react-dom:
-        specifier: 19.1.1
-        version: 19.1.1(react@19.1.1)
-      tailwind-merge:
-        specifier: ^3.3.1
-        version: 3.3.1
-    devDependencies:
-      '@tailwindcss/postcss':
-        specifier: ^4
-        version: 4.1.12
-      '@types/node':
-        specifier: ^20
-        version: 20.19.11
-      '@types/react':
-        specifier: 19.1.13
-        version: 19.1.13
-      '@types/react-dom':
-        specifier: 19.1.9
-        version: 19.1.9(@types/react@19.1.13)
-      drizzle-kit:
-        specifier: ^0.31.4
-        version: 0.31.4
-      tailwindcss:
-        specifier: ^4
-        version: 4.1.12
-      tsx:
-        specifier: ^4.20.5
-        version: 4.20.5
-      tw-animate-css:
-        specifier: ^1.3.8
-        version: 1.4.0
-      typescript:
-        specifier: ^5
-        version: 5.9.2
-
   apps/template-nextjs-javascript:
     dependencies:
       class-variance-authority:
@@ -206,6 +151,15 @@ importers:
 
   packages/loafy:
     dependencies:
+      '@loafy/builders-expo':
+        specifier: workspace:*
+        version: link:../../template-packages/builders-expo
+      '@loafy/builders-nextjs':
+        specifier: workspace:*
+        version: link:../../template-packages/builders-nextjs
+      '@loafy/categories-web':
+        specifier: workspace:*
+        version: link:../../template-packages/categories-web
       commander:
         specifier: ^14.0.0
         version: 14.0.0
@@ -239,6 +193,80 @@ importers:
         version: 2.4.9
       typescript:
         specifier: ^5.9.2
+        version: 5.9.2
+
+  template-packages/builders-expo:
+    dependencies:
+      uuid:
+        specifier: ^9.0.0
+        version: 9.0.1
+    devDependencies:
+      typescript:
+        specifier: ^5.0.0
+        version: 5.9.2
+
+  template-packages/builders-nextjs:
+    dependencies:
+      uuid:
+        specifier: ^9.0.0
+        version: 9.0.1
+    devDependencies:
+      typescript:
+        specifier: ^5.0.0
+        version: 5.9.2
+
+  template-packages/builders-nextjs-betterauth:
+    devDependencies:
+      typescript:
+        specifier: ^5.0.0
+        version: 5.9.2
+
+  template-packages/builders-nextjs-biome:
+    devDependencies:
+      typescript:
+        specifier: ^5.0.0
+        version: 5.9.2
+
+  template-packages/builders-nextjs-drizzle-postgres:
+    devDependencies:
+      typescript:
+        specifier: ^5.0.0
+        version: 5.9.2
+
+  template-packages/builders-nextjs-drizzle-supabase:
+    devDependencies:
+      typescript:
+        specifier: ^5.0.0
+        version: 5.9.2
+
+  template-packages/builders-nextjs-eslint:
+    devDependencies:
+      typescript:
+        specifier: ^5.0.0
+        version: 5.9.2
+
+  template-packages/builders-nextjs-prettier-tailwind:
+    devDependencies:
+      typescript:
+        specifier: ^5.0.0
+        version: 5.9.2
+
+  template-packages/builders-nextjs-supabase:
+    devDependencies:
+      typescript:
+        specifier: ^5.0.0
+        version: 5.9.2
+
+  template-packages/builders-nextjs-supabase-auth:
+    devDependencies:
+      typescript:
+        specifier: ^5.0.0
+        version: 5.9.2
+
+  template-packages/categories-web:
+    devDependencies:
+      typescript:
+        specifier: ^5.0.0
         version: 5.9.2
 
 packages:
@@ -2674,6 +2702,10 @@ packages:
 
   uri-js@4.4.1:
     resolution: {integrity: sha512-7rKUyy33Q1yc98pQ1DAmLtwX109F7TIfWlW1Ydo8Wl1ii1SeHieeh0HHfPeL2fMXK6z0s8ecKs9frCuLJvndBg==}
+
+  uuid@9.0.1:
+    resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
+    hasBin: true
 
   when-exit@2.1.4:
     resolution: {integrity: sha512-4rnvd3A1t16PWzrBUcSDZqcAmsUIy4minDXT/CZ8F2mVDgd65i4Aalimgz1aQkRGU0iH5eT5+6Rx2TK8o443Pg==}
@@ -5238,6 +5270,8 @@ snapshots:
   uri-js@4.4.1:
     dependencies:
       punycode: 2.3.1
+
+  uuid@9.0.1: {}
 
   when-exit@2.1.4: {}
 

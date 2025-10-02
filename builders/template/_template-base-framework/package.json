@@ -1,0 +1,16 @@
+{
+  "name": "@loafy/template-framework-name",
+  "version": "0.1.0",
+  "description": "Framework template for Loafy CLI",
+  "main": "index.js",
+  "files": [
+    "templates/"
+  ],
+  "keywords": [
+    "loafy",
+    "template",
+    "framework-name"
+  ],
+  "dependencies": {},
+  "devDependencies": {}
+}

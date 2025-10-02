@@ -1,0 +1,12 @@
+{
+  "_comment": "Package dependencies that will be added to the main package.json",
+  "dependencies": {
+    "package-specific-lib": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/package-specific-lib": "^1.0.0"
+  },
+  "scripts": {
+    "package-script": "command for this package"
+  }
+}

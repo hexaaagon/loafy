@@ -1,8 +1,0 @@
-{
-  "id": "turborepo-app",
-  "title": "Turborepo Monorepo",
-  "description": "High-performance build system for JavaScript and TypeScript codebases",
-  "ready": false,
-  "conflict": [],
-  "version": "0.1.0"
-}

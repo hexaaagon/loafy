@@ -1,8 +1,0 @@
-{
-  "id": "nextjs-app",
-  "title": "Next.js App",
-  "description": "A modern React framework with server-side rendering and full-stack capabilities",
-  "ready": true,
-  "conflict": [],
-  "version": "0.1.0"
-}

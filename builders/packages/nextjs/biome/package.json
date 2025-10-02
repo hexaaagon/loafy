@@ -1,0 +1,17 @@
+{
+  "name": "@loafy/packages-nextjs-eslint",
+  "version": "0.1.0",
+  "description": "Package addon for Loafy CLI",
+  "main": "index.js",
+  "files": [
+    "templates/"
+  ],
+  "keywords": [
+    "loafy",
+    "package",
+    "addon",
+    "framework-name"
+  ],
+  "dependencies": {},
+  "devDependencies": {}
+}

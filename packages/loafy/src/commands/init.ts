@@ -38,15 +38,65 @@ const onPromptState = (state: {
   }
 };
 
+// Helper function for verbose logging
+const verboseLog = (
+  verbose: boolean | undefined,
+  message: string,
+  data?: any
+) => {
+  if (verbose) {
+    if (data) {
+      console.log(message, data);
+    } else {
+      console.log(message);
+    }
+  }
+};
+
 export async function initProject(options: {
   packageManager?: PackageManager;
   headless?: boolean;
   skipInstall?: boolean;
   projectName?: string;
+  builders?: string[];
+  verbose?: boolean;
 }) {
   try {
-    const { baseTemplates, packageAddons, categories } =
-      await discoverTemplates();
+    const { baseTemplates, packageAddons, categories, categoryPackages } =
+      await discoverTemplates(options.builders);
+
+    if (options.verbose) {
+      console.log("DISCOVERY DEBUG:");
+      console.log(
+        "- Base templates found:",
+        baseTemplates.length,
+        baseTemplates.map((t) => ({
+          name: t.name,
+          title: t.title,
+          ready: t.ready,
+        }))
+      );
+      console.log(
+        "- Package addons found:",
+        packageAddons.length,
+        packageAddons.map((p) => ({
+          name: p.name,
+          title: p.title,
+          ready: p.ready,
+          baseTemplate: p.baseTemplate,
+        }))
+      );
+      console.log(
+        "- Category packages loaded:",
+        categoryPackages.length,
+        categoryPackages
+      );
+      console.log(
+        "- Templates with categories:",
+        categories.size,
+        Array.from(categories.keys())
+      );
+    }
 
     if (baseTemplates.length === 0) {
       consola.error("No base templates found!");
@@ -136,11 +186,13 @@ export async function initProject(options: {
       selectedTemplate.name,
       packageAddons
     );
+
     const templateCategories = categories.get(selectedTemplate.name) || [];
     const selectedPackages = await selectPackages(
       availablePackages,
       templateCategories,
-      options.headless
+      options.headless,
+      options.verbose
     );
 
     const config: ProjectConfig = {
@@ -302,7 +354,8 @@ async function selectPackageManager(
 async function selectPackages(
   availablePackages: PackageAddon[],
   categories: PackageCategory[],
-  headless = false
+  headless = false,
+  verbose = false
 ): Promise<string[]> {
   if (availablePackages.length === 0) {
     return [];
@@ -317,6 +370,21 @@ async function selectPackages(
   const availableReady = availablePackages
     .filter((pkg) => pkg.ready)
     .sort((a, b) => a.title.localeCompare(b.title));
+
+  verboseLog(
+    verbose,
+    "Available packages:",
+    availableReady.map((p) => ({
+      title: p.title,
+      category: p.category,
+      needed: p.needed,
+    }))
+  );
+  verboseLog(
+    verbose,
+    "Template categories:",
+    categories.map((c) => ({ id: c.id, title: c.title }))
+  );
 
   if (availableReady.length === 0) {
     consola.info("No additional packages are available for this template yet.");
@@ -378,10 +446,22 @@ async function selectPackages(
     .map((cat) => cat.id);
 
   for (const categoryId of sortedCategories) {
+    verboseLog(verbose, `Processing category: ${categoryId}`);
     const category = categories.find((cat) => cat.id === categoryId);
     const categoryPackages = packagesByCategory.get(categoryId) || [];
+    verboseLog(
+      verbose,
+      `Category ${categoryId} has ${categoryPackages.length} packages:`,
+      categoryPackages.map((p) => p.title)
+    );
 
-    if (categoryPackages.length === 0 || !category) continue;
+    if (categoryPackages.length === 0 || !category) {
+      verboseLog(
+        verbose,
+        `Skipping category ${categoryId} - no packages or category not found`
+      );
+      continue;
+    }
 
     // Skip authentication if no database package was selected
     if (categoryId === "authentication") {
@@ -489,5 +569,10 @@ export function addCommonOptions(command: Command): Command {
       "--package-manager <pm>",
       "preferred package manager (npm, yarn, pnpm, bun)"
     )
-    .option("--skip-install", "skip installing dependencies");
+    .option("--skip-install", "skip installing dependencies")
+    .option(
+      "-b, --builders <packages...>",
+      "specify builder packages to use (e.g., @loafy/builders-nextjs)"
+    )
+    .option("-v, --verbose", "enable verbose logging for debugging");
 }

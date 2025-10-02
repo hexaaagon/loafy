@@ -1,0 +1,10 @@
+{
+  "id": "template-framework-id",
+  "uuid": "00000000-0000-0000-0000-000000000000",
+  "title": "Template Framework Name",
+  "description": "Description of the framework template",
+  "ready": false,
+  "conflict": [],
+  "version": "0.1.0",
+  "languages": ["javascript", "typescript"]
+}

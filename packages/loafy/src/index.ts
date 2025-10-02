@@ -10,6 +10,9 @@ import { initProject, addCommonOptions } from "./commands/init.js";
 import updateCheck from "update-check";
 import packageJson from "../package.json" with { type: "json" };
 
+// Configure consola to remove timestamps and extra formatting
+consola.options.formatOptions.date = false;
+
 const handleSigTerm = () => process.exit(0);
 
 process.on("SIGINT", handleSigTerm);
@@ -47,6 +50,8 @@ addCommonOptions(program.command("init"))
       packageManager,
       headless: options.headless,
       skipInstall: options.skipInstall,
+      builders: options.builders,
+      verbose: options.verbose,
     });
   });
 

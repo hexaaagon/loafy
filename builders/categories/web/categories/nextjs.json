@@ -1,0 +1,30 @@
+[
+  {
+    "id": "linting-formatting",
+    "uuid": "c4e8f7a2-9b3d-4e1f-8c5a-6d2b9f7e4a1c",
+    "title": "Linting & Formatting",
+    "description": "Code quality and style enforcement tools",
+    "order": 1
+  },
+  {
+    "id": "database",
+    "uuid": "d5f9a8b3-1c4e-5f2a-9d6b-7e3c8a1f5b2d",
+    "title": "Database & ORM",
+    "description": "Database connections and ORM solutions",
+    "order": 2
+  },
+  {
+    "id": "authentication",
+    "uuid": "e6a1b9c4-2d5f-6a3b-1e7c-8f4d9b2a6c3e",
+    "title": "Authentication",
+    "description": "User authentication and authorization solutions",
+    "order": 3
+  },
+  {
+    "id": "extras",
+    "uuid": "f7b2c1d5-3e6a-7b4c-2f8d-9a5e1c3b7d4f",
+    "title": "Extras",
+    "description": "Additional utilities and integrations",
+    "order": 4
+  }
+]

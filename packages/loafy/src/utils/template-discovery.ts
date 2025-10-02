@@ -1,5 +1,5 @@
-import { existsSync, readFileSync } from "fs";
-import { join, dirname } from "path";
+import { existsSync, readFileSync, readdirSync, type Dirent } from "fs";
+import { join, dirname, basename } from "path";
 import { fileURLToPath } from "url";
 import { glob } from "glob";
 import type {
@@ -11,137 +11,339 @@ import type {
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// Try multiple possible template directories
-function getTemplatesDir(): string {
+// Try multiple possible locations for @loafy packages
+function getLoafyPackagesDir(): {
+  path: string;
+  mode: "development" | "production";
+} {
   const possibilities = [
-    // Development: running from src/
-    join(__dirname, "..", "..", "src", "templates"),
-    // Built: running from dist/
-    join(__dirname, "..", "..", "templates"),
-    // Built: running from dist/ but templates copied to dist/
-    join(__dirname, "..", "templates"),
-    // Development: running from project root
-    join(process.cwd(), "src", "templates"),
-    // Package: installed as dependency
-    join(__dirname, "..", "..", "..", "templates"),
+    // Development: monorepo workspace builders directory
+    { path: join(process.cwd(), "builders"), mode: "development" as const },
+    // Development: running from packages/loafy in monorepo
+    {
+      path: join(__dirname, "..", "..", "..", "..", "builders"),
+      mode: "development" as const,
+    },
+    // Production: installed packages in node_modules
+    {
+      path: join(process.cwd(), "node_modules", "@loafy"),
+      mode: "production" as const,
+    },
+    // Production: CLI installed globally or in different location
+    {
+      path: join(__dirname, "..", "..", "..", "node_modules", "@loafy"),
+      mode: "production" as const,
+    },
   ];
 
-  for (const path of possibilities) {
-    if (existsSync(path)) {
-      return path;
+  for (const option of possibilities) {
+    if (existsSync(option.path)) {
+      return option;
     }
   }
 
   throw new Error(
-    `Templates directory not found. Tried: ${possibilities.join(", ")}`
+    `Loafy packages directory not found. Tried: ${possibilities.map((p) => p.path).join(", ")}`
   );
 }
 
-export async function discoverTemplates(): Promise<{
+// Development mode: scan builders/ directory structure
+async function discoverDevelopmentPackages(
+  buildersDir: string,
+  baseTemplates: BaseTemplate[],
+  packageAddons: PackageAddon[],
+  categories: Map<string, PackageCategory[]>,
+  categoryPackages: string[]
+): Promise<void> {
+  // Scan template/ directory for base templates
+  const templateDir = join(buildersDir, "template");
+  if (existsSync(templateDir)) {
+    const templateDirs = readdirSync(templateDir, { withFileTypes: true })
+      .filter(
+        (dirent: Dirent) => dirent.isDirectory() && !dirent.name.startsWith("_")
+      )
+      .map((dirent: Dirent) => join(templateDir, dirent.name));
+
+    for (const packageDir of templateDirs) {
+      const configPath = join(packageDir, "config.json");
+      if (!existsSync(configPath)) continue;
+
+      try {
+        const config = await loadConfig(configPath);
+        const packageName = basename(packageDir);
+        const templatesPath = join(packageDir, "templates");
+
+        if (!existsSync(templatesPath)) {
+          console.warn(
+            `Template package ${packageName} is missing templates directory`
+          );
+          continue;
+        }
+
+        baseTemplates.push({
+          id: config.id,
+          name: packageName,
+          title: config.title,
+          description: config.description,
+          ready: config.ready,
+          path: templatesPath,
+        });
+      } catch (error) {
+        console.warn(
+          `Failed to load template config from ${configPath}: ${error}`
+        );
+      }
+    }
+  }
+
+  // Scan packages/ directory for package addons
+  const packagesDir = join(buildersDir, "packages");
+  if (existsSync(packagesDir)) {
+    // Use glob to find all config.json files recursively
+    const configFiles = await glob("**/config.json", {
+      cwd: packagesDir,
+      absolute: true,
+      ignore: ["**/_*/**", "**/node_modules/**"], // Ignore template scaffolds and node_modules
+    });
+
+    for (const configPath of configFiles) {
+      const packageDir = dirname(configPath);
+      const packageName = basename(packageDir);
+
+      // Skip template scaffolds
+      if (packageName.startsWith("_")) continue;
+
+      try {
+        const config = await loadConfig(configPath);
+        const templatesPath = join(packageDir, "templates");
+
+        if (!existsSync(templatesPath)) {
+          console.warn(
+            `Package addon ${packageName} is missing templates directory`
+          );
+          continue;
+        }
+
+        packageAddons.push({
+          id: config.id,
+          name: packageName,
+          title: config.title,
+          description: config.description,
+          category: config.category || "extras",
+          categoryUuid: config.categoryUuid || "",
+          ready: config.ready,
+          conflict: config.conflict || [],
+          needed: config.needed || [],
+          path: templatesPath,
+          baseTemplate: config.baseTemplate || "unknown",
+          baseTemplateUuid: config.baseTemplateUuid || "",
+        });
+      } catch (error) {
+        console.warn(
+          `Failed to load package config from ${configPath}: ${error}`
+        );
+      }
+    }
+  }
+
+  // Scan categories/ directory for category definitions
+  const categoriesDir = join(buildersDir, "categories");
+  if (existsSync(categoriesDir)) {
+    const categoryPackageDirs = readdirSync(categoriesDir, {
+      withFileTypes: true,
+    })
+      .filter(
+        (dirent: Dirent) => dirent.isDirectory() && !dirent.name.startsWith("_")
+      )
+      .map((dirent: Dirent) => join(categoriesDir, dirent.name));
+
+    for (const packageDir of categoryPackageDirs) {
+      const packageName = basename(packageDir);
+      const categoriesSubDir = join(packageDir, "categories");
+      if (!existsSync(categoriesSubDir)) continue;
+
+      // Track this category package
+      categoryPackages.push(packageName);
+
+      const categoryFiles = await glob("*.json", {
+        cwd: categoriesSubDir,
+        absolute: true,
+      });
+
+      for (const categoryFile of categoryFiles) {
+        try {
+          const categoryContent = readFileSync(categoryFile, "utf-8");
+          const templateCategories: PackageCategory[] =
+            JSON.parse(categoryContent);
+          const templateName = basename(categoryFile, ".json");
+          categories.set(templateName, templateCategories);
+        } catch (error) {
+          console.warn(
+            `Failed to load category from ${categoryFile}: ${error}`
+          );
+        }
+      }
+    }
+  }
+}
+
+// Production mode: scan node_modules/@loafy/ directory
+async function discoverProductionPackages(
+  loafyDir: string,
+  baseTemplates: BaseTemplate[],
+  packageAddons: PackageAddon[],
+  categories: Map<string, PackageCategory[]>,
+  categoryPackages: string[]
+): Promise<void> {
+  const packageDirs = readdirSync(loafyDir, { withFileTypes: true })
+    .filter(
+      (dirent: Dirent) => dirent.isDirectory() && !dirent.name.startsWith("_")
+    )
+    .map((dirent: Dirent) => join(loafyDir, dirent.name));
+
+  for (const packageDir of packageDirs) {
+    const configPath = join(packageDir, "config.json");
+
+    if (!existsSync(configPath)) {
+      continue;
+    }
+
+    try {
+      const config = await loadConfig(configPath);
+      const packageName = basename(packageDir);
+
+      // Determine package type by name prefix
+      if (
+        packageName.startsWith("template-") ||
+        packageName === "nextjs" ||
+        packageName === "expo"
+      ) {
+        // Base template package: @loafy/template-nextjs or @loafy/nextjs
+        const templatesPath = join(packageDir, "templates");
+
+        if (!existsSync(templatesPath)) {
+          console.warn(
+            `Template package ${packageName} is missing templates directory`
+          );
+          continue;
+        }
+
+        baseTemplates.push({
+          id: config.id,
+          name: packageName.replace("template-", ""),
+          title: config.title,
+          description: config.description,
+          ready: config.ready,
+          path: templatesPath,
+        });
+      } else if (packageName.startsWith("categories-")) {
+        // Categories package: @loafy/categories-web
+        const categoriesDir = join(packageDir, "categories");
+
+        if (!existsSync(categoriesDir)) {
+          console.warn(
+            `Categories package ${packageName} is missing categories directory`
+          );
+          continue;
+        }
+
+        // Track this category package (remove "categories-" prefix)
+        categoryPackages.push(packageName.replace("categories-", ""));
+
+        const categoryFiles = await glob("*.json", {
+          cwd: categoriesDir,
+          absolute: true,
+        });
+
+        for (const categoryFile of categoryFiles) {
+          try {
+            const categoryContent = readFileSync(categoryFile, "utf-8");
+            const templateCategories: PackageCategory[] =
+              JSON.parse(categoryContent);
+            const templateName = basename(categoryFile, ".json");
+            categories.set(templateName, templateCategories);
+          } catch (error) {
+            console.warn(
+              `Failed to load category from ${categoryFile}: ${error}`
+            );
+          }
+        }
+      } else {
+        // Package addon: @loafy/nextjs-auth, @loafy/nextjs-drizzle-postgres
+        const templatesPath = join(packageDir, "templates");
+
+        if (!existsSync(templatesPath)) {
+          console.warn(
+            `Package addon ${packageName} is missing templates directory`
+          );
+          continue;
+        }
+
+        packageAddons.push({
+          id: config.id,
+          name: packageName,
+          title: config.title,
+          description: config.description,
+          category: config.category || "extras",
+          categoryUuid: config.categoryUuid || "",
+          ready: config.ready,
+          conflict: config.conflict || [],
+          needed: config.needed || [],
+          path: templatesPath,
+          baseTemplate: config.baseTemplate || "unknown",
+          baseTemplateUuid: config.baseTemplateUuid || "",
+        });
+      }
+    } catch (error) {
+      console.warn(`Failed to load config from ${configPath}: ${error}`);
+    }
+  }
+}
+
+export async function discoverTemplates(specifiedBuilders?: string[]): Promise<{
   baseTemplates: BaseTemplate[];
   packageAddons: PackageAddon[];
   categories: Map<string, PackageCategory[]>; // baseTemplate -> categories
+  categoryPackages: string[]; // List of category package names (e.g., "web")
 }> {
   const baseTemplates: BaseTemplate[] = [];
   const packageAddons: PackageAddon[] = [];
   const categories: Map<string, PackageCategory[]> = new Map();
+  const categoryPackages: string[] = [];
 
-  const TEMPLATES_DIR = getTemplatesDir();
+  const { path: LOAFY_PACKAGES_DIR, mode } = getLoafyPackagesDir();
 
   try {
-    // Find all config.json files in the templates directory
-    const configFiles = await glob("**/config.json", {
-      cwd: TEMPLATES_DIR,
-      absolute: true,
-    });
-
-    for (const configPath of configFiles) {
-      try {
-        const config = await loadConfig(configPath);
-        const relativePath = configPath
-          .replace(TEMPLATES_DIR, "")
-          .replace(/^[\\\/]/, "");
-        const parts = relativePath.split(/[\\\/]/);
-
-        if (parts.length === 3 && parts[1] === "app") {
-          // This is a base template: templates/nextjs/app/config.json
-          const templateName = parts[0];
-          const templatePath = join(TEMPLATES_DIR, templateName, "app");
-
-          baseTemplates.push({
-            id: config.id,
-            name: templateName,
-            title: config.title,
-            description: config.description,
-            ready: config.ready,
-            path: templatePath,
-          });
-        } else if (parts.length === 4 && parts[1] === "packages") {
-          // This is a package addon: templates/nextjs/packages/supabase/config.json
-          const templateName = parts[0];
-          const packageName = parts[2];
-          const packagePath = join(
-            TEMPLATES_DIR,
-            templateName,
-            "packages",
-            packageName
-          );
-
-          packageAddons.push({
-            id: config.id,
-            name: packageName,
-            title: config.title,
-            description: config.description,
-            category: config.category || "extras", // Default to extras if no category specified
-            ready: config.ready,
-            conflict: config.conflict,
-            needed: config.needed || [], // Default to empty array if not specified
-            version: config.version,
-            path: packagePath,
-            baseTemplate: templateName,
-          });
-        }
-      } catch (error) {
-        console.warn(`Failed to load config from ${configPath}: ${error}`);
-      }
+    if (mode === "development") {
+      // Development mode: scan builders/template/, builders/packages/, builders/categories/
+      await discoverDevelopmentPackages(
+        LOAFY_PACKAGES_DIR,
+        baseTemplates,
+        packageAddons,
+        categories,
+        categoryPackages
+      );
+    } else {
+      // Production mode: scan node_modules/@loafy/
+      await discoverProductionPackages(
+        LOAFY_PACKAGES_DIR,
+        baseTemplates,
+        packageAddons,
+        categories,
+        categoryPackages
+      );
     }
   } catch (error) {
-    throw new Error(`Failed to discover templates: ${error}`);
+    throw new Error(`Failed to discover @loafy packages: ${error}`);
   }
 
-  // Load categories for each base template
+  // Set default categories for templates that don't have categories loaded
   for (const template of baseTemplates) {
-    const categoryPath = join(
-      TEMPLATES_DIR,
-      template.name,
-      "packages",
-      "category.json"
-    );
-    if (existsSync(categoryPath)) {
-      try {
-        const categoryContent = readFileSync(categoryPath, "utf-8");
-        const templateCategories: PackageCategory[] =
-          JSON.parse(categoryContent);
-        categories.set(template.name, templateCategories);
-      } catch (error) {
-        console.warn(
-          `Failed to load categories from ${categoryPath}: ${error}`
-        );
-        // Set default categories if loading fails
-        categories.set(template.name, [
-          {
-            id: "extras",
-            title: "Extras",
-            description: "Additional utilities",
-            order: 1,
-          },
-        ]);
-      }
-    } else {
-      // Set default categories if file doesn't exist
+    if (!categories.has(template.name)) {
       categories.set(template.name, [
         {
           id: "extras",
+          uuid: "f7b2c1d5-3e6a-7b4c-2f8d-9a5e1c3b7d4f",
           title: "Extras",
           description: "Additional utilities",
           order: 1,
@@ -150,7 +352,7 @@ export async function discoverTemplates(): Promise<{
     }
   }
 
-  return { baseTemplates, packageAddons, categories };
+  return { baseTemplates, packageAddons, categories, categoryPackages };
 }
 
 async function loadConfig(configPath: string): Promise<TemplateConfig> {

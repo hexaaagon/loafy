@@ -3,14 +3,17 @@ export interface TemplateConfig {
   title: string;
   description: string;
   category?: string;
+  categoryUuid?: string;
   ready: boolean;
   conflict: string[];
   needed: string[];
-  version: string;
+  baseTemplate?: string;
+  baseTemplateUuid?: string;
 }
 
 export interface PackageCategory {
   id: string;
+  uuid: string;
   title: string;
   description: string;
   order: number;
@@ -31,12 +34,13 @@ export interface PackageAddon {
   title: string;
   description: string;
   category: string;
+  categoryUuid: string;
   ready: boolean;
   conflict: string[];
   needed: string[];
-  version: string;
   path: string;
   baseTemplate: string;
+  baseTemplateUuid: string;
 }
 
 export type Language = "js" | "ts";
