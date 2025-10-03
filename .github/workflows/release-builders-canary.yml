@@ -54,8 +54,6 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 8
 
       - name: Get pnpm store directory
         id: pnpm-cache
@@ -80,6 +78,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
+          version: 10.14.0
           run_install: false
 
       - name: Get pnpm store directory
@@ -372,18 +371,6 @@ jobs:
           echo "\`\`\`" >> release_notes.md
           
           cat release_notes.md
-
-      - name: Create GitHub Release
-        if: steps.select.outputs.HAS_PACKAGES == 'true' && github.event.inputs.dry_run != 'true'
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: "builders/canary-v${{ github.run_number }}"
-          release_name: "Builders Canary Release #${{ github.run_number }}"
-          body_path: release_notes.md
-          draft: false
-          prerelease: true
 
       - name: Summary
         if: steps.select.outputs.HAS_PACKAGES == 'true'
