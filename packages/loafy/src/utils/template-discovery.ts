@@ -213,8 +213,8 @@ async function discoverProductionPackages(
   if (process.env.VERBOSE || process.env.DEBUG) {
     console.log("Scanning @loafy directory:", loafyDir);
     const foundDirs = readdirSync(loafyDir, { withFileTypes: true })
-      .filter(d => d.isDirectory())
-      .map(d => d.name);
+      .filter((d) => d.isDirectory())
+      .map((d) => d.name);
     console.log("Found package directories:", foundDirs);
   }
 

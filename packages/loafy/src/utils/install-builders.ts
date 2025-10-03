@@ -74,14 +74,14 @@ export async function installBuilders(
 
   try {
     const installDir = getInstallDirectory();
-    
+
     if (process.env.VERBOSE || process.env.DEBUG) {
       console.log("Install directory:", installDir);
       console.log("Install directory exists:", existsSync(installDir));
       console.log("__dirname:", __dirname);
       console.log("process.cwd():", process.cwd());
     }
-    
+
     let installCommand: string;
 
     switch (packageManager) {
