@@ -7,7 +7,9 @@
     "config.json",
     "templates/**/*"
   ],
-  "scripts": {},
+  "scripts": {
+    "build": "node -e \"console.log('No build needed for package addon')\""
+  },
   "keywords": [
     "loafy",
     "package",

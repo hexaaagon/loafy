@@ -9,7 +9,7 @@
     "templates/**/*"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "node -e \"console.log('No build needed for template package')\"",
     "dev": "tsc --watch"
   },
   "keywords": [

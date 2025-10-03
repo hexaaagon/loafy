@@ -7,7 +7,9 @@
     "config.json",
     "categories/**/*"
   ],
-  "scripts": {},
+  "scripts": {
+    "build": "node -e \"console.log('No build needed for categories package')\""
+  },
   "keywords": [
     "loafy",
     "categories",

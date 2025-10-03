@@ -80,7 +80,7 @@ jobs:
             ${{ runner.os }}-build-
 
       - name: Build packages
-        run: pnpm run build
+        run: pnpm run build --filter="./packages/**"
 
       - name: Get version from tag (if triggered by release)
         if: github.event_name == 'release'
