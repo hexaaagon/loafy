@@ -320,14 +320,16 @@ jobs:
       - name: Publish to npm
         if: steps.select.outputs.HAS_PACKAGES == 'true' && github.event.inputs.dry_run != 'true'
         run: |
+          WORKSPACE_ROOT=$(pwd)
+          
           while IFS='|' read -r pkg_dir pkg_name old_version new_version; do
             echo "Publishing $pkg_name@$new_version"
-            cd "$pkg_dir"
+            cd "$WORKSPACE_ROOT/$pkg_dir"
             
             # Publish to npm
             npm publish --access public
             
-            cd - > /dev/null
+            cd "$WORKSPACE_ROOT"
           done <<< "$VERSION_CHANGES"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

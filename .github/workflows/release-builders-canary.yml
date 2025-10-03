@@ -250,9 +250,9 @@ jobs:
           version_changes=""
           
           while IFS='|' read -r pkg_dir pkg_name pkg_version; do
-            cd "$WORKSPACE_ROOT/$pkg_dir"
-            
             echo "Processing $pkg_name (current: $pkg_version)"
+            
+            pkg_json="$WORKSPACE_ROOT/$pkg_dir/package.json"
             
             # Check if current version is already a canary
             if [[ $pkg_version == *"-canary."* ]]; then
@@ -266,28 +266,28 @@ jobs:
               
               echo "  Incrementing canary: $pkg_version → $new_version"
               
-              # Manually update package.json
-              node -e "const fs=require('fs');const pkg=JSON.parse(fs.readFileSync('package.json','utf8'));pkg.version='$new_version';fs.writeFileSync('package.json',JSON.stringify(pkg,null,2)+'\n');"
+              # Manually update package.json using absolute path
+              node -e "const fs=require('fs');const pkg=JSON.parse(fs.readFileSync('$pkg_json','utf8'));pkg.version='$new_version';fs.writeFileSync('$pkg_json',JSON.stringify(pkg,null,2)+'\n');"
             else
               echo "  Stable version, bumping to canary"
               
-              # First bump the version according to type
+              # First bump the version according to type (need to cd for npm version)
+              cd "$WORKSPACE_ROOT/$pkg_dir"
               bumped_version=$(npm version "$version_type" --no-git-tag-version)
               bumped_version=${bumped_version#v}  # Remove 'v' prefix
+              cd "$WORKSPACE_ROOT"
               
               # Then add -canary.1 suffix
               new_version="${bumped_version}-canary.1"
               
               echo "  Bumping: $pkg_version → $new_version"
               
-              # Manually update package.json to add canary suffix
-              node -e "const fs=require('fs');const pkg=JSON.parse(fs.readFileSync('package.json','utf8'));pkg.version='$new_version';fs.writeFileSync('package.json',JSON.stringify(pkg,null,2)+'\n');"
+              # Manually update package.json to add canary suffix using absolute path
+              node -e "const fs=require('fs');const pkg=JSON.parse(fs.readFileSync('$pkg_json','utf8'));pkg.version='$new_version';fs.writeFileSync('$pkg_json',JSON.stringify(pkg,null,2)+'\n');"
             fi
             
             version_changes="${version_changes}${pkg_dir}|${pkg_name}|${pkg_version}|${new_version}"$'\n'
           done < selected_packages.txt
-          
-          cd "$WORKSPACE_ROOT"
           
           # Save to GITHUB_ENV for next steps
           echo "VERSION_CHANGES<<EOF" >> $GITHUB_ENV
@@ -331,15 +331,17 @@ jobs:
       - name: Publish to npm (with canary tag)
         if: steps.select.outputs.HAS_PACKAGES == 'true' && github.event.inputs.dry_run != 'true'
         run: |
+          WORKSPACE_ROOT=$(pwd)
+          
           while IFS='|' read -r pkg_dir pkg_name old_version new_version; do
             echo "Publishing $pkg_name@$new_version with canary tag"
-            cd "$pkg_dir"
+            cd "$WORKSPACE_ROOT/$pkg_dir"
             
             # Publish to npm with 'canary' dist-tag
             npm publish --access public --tag canary
             
-            cd - > /dev/null
-          done < version_changes.txt
+            cd "$WORKSPACE_ROOT"
+          done <<< "$VERSION_CHANGES"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
