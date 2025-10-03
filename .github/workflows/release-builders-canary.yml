@@ -355,6 +355,49 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+      - name: Update template-registry.ts with new builder versions
+        if: steps.select.outputs.HAS_PACKAGES == 'true' && github.event.inputs.dry_run != 'true'
+        run: |
+          REGISTRY_FILE="packages/loafy/src/utils/template-registry.ts"
+          
+          echo "Updating builder versions in template-registry.ts..."
+          
+          while IFS='|' read -r pkg_dir pkg_name old_version new_version; do
+            echo "Processing $pkg_name: $old_version → $new_version"
+            
+            # Determine the template name from package name
+            if [[ $pkg_name == "@loafy/builders-"* ]]; then
+              template_name=$(echo "$pkg_name" | sed 's/@loafy\/builders-//')
+              
+              # Create version range (^x.y.z)
+              version_range="^${new_version}"
+              
+              echo "  Updating $template_name version to $version_range"
+              
+              # Update the version in template-registry.ts using sed
+              # Match the template block and update its version line
+              sed -i "/$template_name: {/,/},/ s/version: \"[^\"]*\",/version: \"$version_range\", \/\/ AUTO-UPDATED by workflow/" "$REGISTRY_FILE"
+            fi
+          done < /tmp/version_changes.txt
+          
+          # Show the changes
+          echo "Updated template-registry.ts:"
+          cat "$REGISTRY_FILE"
+
+      - name: Commit template-registry.ts updates
+        if: steps.select.outputs.HAS_PACKAGES == 'true' && github.event.inputs.dry_run != 'true'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          if git diff --quiet packages/loafy/src/utils/template-registry.ts; then
+            echo "No changes to template-registry.ts"
+          else
+            git add packages/loafy/src/utils/template-registry.ts
+            git commit -m "chore(loafy): update builder versions in template-registry.ts"
+            git push
+          fi
+
       - name: Generate release notes
         if: steps.select.outputs.HAS_PACKAGES == 'true' && github.event.inputs.dry_run != 'true'
         id: release_notes

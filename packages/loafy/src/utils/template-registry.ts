@@ -1,44 +1,4 @@
 import type { BaseTemplate } from "../types/template.js";
-import { readFileSync } from "fs";
-import { fileURLToPath } from "url";
-import { dirname, join } from "path";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-/**
- * Get the current loafy package version
- */
-function getLoafyVersion(): string {
-  try {
-    const packageJsonPath = join(__dirname, "../../package.json");
-    const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf-8"));
-    return packageJson.version;
-  } catch {
-    return "latest";
-  }
-}
-
-/**
- * Determine which builder version to use based on loafy version
- */
-function getBuilderVersion(): string {
-  const loafyVersion = getLoafyVersion();
-
-  // If loafy is a canary version, use canary builders
-  if (loafyVersion.includes("-canary.")) {
-    return "canary";
-  }
-
-  // For stable versions, use semver range matching the loafy version
-  // This ensures old loafy versions use compatible old builder versions
-  const match = loafyVersion.match(/^(\d+\.\d+)/);
-  if (match) {
-    return `^${match[1]}.0`;
-  }
-
-  return "latest";
-}
 
 /**
  * Hardcoded list of available templates
@@ -63,14 +23,14 @@ export const AVAILABLE_TEMPLATES: Omit<BaseTemplate, "path">[] = [
 
 /**
  * Get builder package names for a template
+ * 
+ * NOTE: Versions are automatically updated by CI/CD workflows when builders are published
  */
 export function getBuilderPackages(templateName: string): {
   template: string;
   categories: string;
   version: string;
 } {
-  const version = getBuilderVersion();
-
   const builderMap: Record<
     string,
     { template: string; categories: string; version: string }
@@ -78,12 +38,12 @@ export function getBuilderPackages(templateName: string): {
     nextjs: {
       template: "@loafy/builders-nextjs",
       categories: "@loafy/categories-web",
-      version,
+      version: "^0.2.0", // AUTO-UPDATED by workflow
     },
     expo: {
       template: "@loafy/builders-expo",
       categories: "@loafy/categories-mobile",
-      version,
+      version: "^0.1.0", // AUTO-UPDATED by workflow
     },
   };
 
@@ -91,7 +51,7 @@ export function getBuilderPackages(templateName: string): {
     builderMap[templateName] || {
       template: `@loafy/builders-${templateName}`,
       categories: "@loafy/categories-web",
-      version,
+      version: "latest",
     }
   );
 }
