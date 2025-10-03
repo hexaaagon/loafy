@@ -147,19 +147,55 @@ importers:
         specifier: ^5
         version: 5.9.2
 
+  builders/categories/_template-categories: {}
+
+  builders/categories/web:
+    devDependencies:
+      typescript:
+        specifier: ^5.0.0
+        version: 5.9.2
+
+  builders/packages/_template-package-addon: {}
+
+  builders/packages/nextjs/biome: {}
+
+  builders/packages/nextjs/eslint: {}
+
+  builders/template/_template-base-framework: {}
+
+  builders/template/expo:
+    dependencies:
+      uuid:
+        specifier: ^9.0.0
+        version: 9.0.1
+    devDependencies:
+      typescript:
+        specifier: ^5.0.0
+        version: 5.9.2
+
+  builders/template/nextjs:
+    dependencies:
+      uuid:
+        specifier: ^9.0.0
+        version: 9.0.1
+    devDependencies:
+      typescript:
+        specifier: ^5.0.0
+        version: 5.9.2
+
   packages/create-loafy: {}
 
   packages/loafy:
     dependencies:
       '@loafy/builders-expo':
         specifier: workspace:*
-        version: link:../../template-packages/builders-expo
+        version: link:../../builders/template/expo
       '@loafy/builders-nextjs':
         specifier: workspace:*
-        version: link:../../template-packages/builders-nextjs
+        version: link:../../builders/template/nextjs
       '@loafy/categories-web':
         specifier: workspace:*
-        version: link:../../template-packages/categories-web
+        version: link:../../builders/categories/web
       commander:
         specifier: ^14.0.0
         version: 14.0.0
@@ -193,80 +229,6 @@ importers:
         version: 2.4.9
       typescript:
         specifier: ^5.9.2
-        version: 5.9.2
-
-  template-packages/builders-expo:
-    dependencies:
-      uuid:
-        specifier: ^9.0.0
-        version: 9.0.1
-    devDependencies:
-      typescript:
-        specifier: ^5.0.0
-        version: 5.9.2
-
-  template-packages/builders-nextjs:
-    dependencies:
-      uuid:
-        specifier: ^9.0.0
-        version: 9.0.1
-    devDependencies:
-      typescript:
-        specifier: ^5.0.0
-        version: 5.9.2
-
-  template-packages/builders-nextjs-betterauth:
-    devDependencies:
-      typescript:
-        specifier: ^5.0.0
-        version: 5.9.2
-
-  template-packages/builders-nextjs-biome:
-    devDependencies:
-      typescript:
-        specifier: ^5.0.0
-        version: 5.9.2
-
-  template-packages/builders-nextjs-drizzle-postgres:
-    devDependencies:
-      typescript:
-        specifier: ^5.0.0
-        version: 5.9.2
-
-  template-packages/builders-nextjs-drizzle-supabase:
-    devDependencies:
-      typescript:
-        specifier: ^5.0.0
-        version: 5.9.2
-
-  template-packages/builders-nextjs-eslint:
-    devDependencies:
-      typescript:
-        specifier: ^5.0.0
-        version: 5.9.2
-
-  template-packages/builders-nextjs-prettier-tailwind:
-    devDependencies:
-      typescript:
-        specifier: ^5.0.0
-        version: 5.9.2
-
-  template-packages/builders-nextjs-supabase:
-    devDependencies:
-      typescript:
-        specifier: ^5.0.0
-        version: 5.9.2
-
-  template-packages/builders-nextjs-supabase-auth:
-    devDependencies:
-      typescript:
-        specifier: ^5.0.0
-        version: 5.9.2
-
-  template-packages/categories-web:
-    devDependencies:
-      typescript:
-        specifier: ^5.0.0
         version: 5.9.2
 
 packages:
