@@ -95,14 +95,14 @@ jobs:
             fi
             
             # Check if ready
-            local ready=$(jq -r '.ready // false' "$config_file")
+            local ready=$(node -e "try { const config = require('./$config_file'); console.log(config.ready || false); } catch(e) { console.log(false); }")
             if [ "$ready" != "true" ]; then
               return 1
             fi
             
             # Get package name and version
-            local name=$(jq -r '.name' "$package_file")
-            local version=$(jq -r '.version' "$package_file")
+            local name=$(node -e "const pkg = require('./$package_file'); console.log(pkg.name);")
+            local version=$(node -e "const pkg = require('./$package_file'); console.log(pkg.version);")
             
             echo "$pkg_dir|$name|$version"
           }
@@ -228,12 +228,26 @@ jobs:
             
             echo "Processing $pkg_name (current: $pkg_version)"
             
-            # Bump version
-            new_version=$(npm version "$version_type" --no-git-tag-version)
-            new_version=${new_version#v}  # Remove 'v' prefix
+            # Check if current version is a canary/pre-release
+            if [[ $pkg_version == *"-"* ]]; then
+              echo "  Pre-release version detected, promoting to stable"
+              
+              # Strip pre-release suffix (e.g., -canary.2, -alpha.1, etc.)
+              new_version=$(echo "$pkg_version" | sed 's/-.*$//')
+              
+              # Update to stable version (no bumping)
+              node -e "const fs=require('fs');const pkg=JSON.parse(fs.readFileSync('package.json','utf8'));pkg.version='$new_version';fs.writeFileSync('package.json',JSON.stringify(pkg,null,2)+'\n');"
+              
+              echo "  Promoted to stable: $new_version"
+            else
+              # Stable to stable: bump version normally
+              new_version=$(npm version "$version_type" --no-git-tag-version)
+              new_version=${new_version#v}  # Remove 'v' prefix
+              
+              echo "  Bumped to: $new_version"
+            fi
             
             echo "$pkg_dir|$pkg_name|$pkg_version|$new_version" >> ../../version_changes.txt
-            echo "  Bumped to: $new_version"
             
             cd - > /dev/null
           done < selected_packages.txt

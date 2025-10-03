@@ -95,14 +95,14 @@ jobs:
             fi
             
             # Check if ready
-            local ready=$(jq -r '.ready // false' "$config_file")
+            local ready=$(node -e "try { const config = require('./$config_file'); console.log(config.ready || false); } catch(e) { console.log(false); }")
             if [ "$ready" != "true" ]; then
               return 1
             fi
             
             # Get package name and version
-            local name=$(jq -r '.name' "$package_file")
-            local version=$(jq -r '.version' "$package_file")
+            local name=$(node -e "const pkg = require('./$package_file'); console.log(pkg.name);")
+            local version=$(node -e "const pkg = require('./$package_file'); console.log(pkg.version);")
             
             echo "$pkg_dir|$name|$version"
           }
@@ -241,8 +241,7 @@ jobs:
               echo "  Incrementing canary: $pkg_version → $new_version"
               
               # Manually update package.json
-              jq ".version = \"$new_version\"" package.json > package.json.tmp
-              mv package.json.tmp package.json
+              node -e "const fs=require('fs');const pkg=JSON.parse(fs.readFileSync('package.json','utf8'));pkg.version='$new_version';fs.writeFileSync('package.json',JSON.stringify(pkg,null,2)+'\n');"
             else
               echo "  Stable version, bumping to canary"
               
@@ -256,8 +255,7 @@ jobs:
               echo "  Bumping: $pkg_version → $new_version"
               
               # Manually update package.json to add canary suffix
-              jq ".version = \"$new_version\"" package.json > package.json.tmp
-              mv package.json.tmp package.json
+              node -e "const fs=require('fs');const pkg=JSON.parse(fs.readFileSync('package.json','utf8'));pkg.version='$new_version';fs.writeFileSync('package.json',JSON.stringify(pkg,null,2)+'\n');"
             fi
             
             echo "$pkg_dir|$pkg_name|$pkg_version|$new_version" >> ../../version_changes.txt
