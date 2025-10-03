@@ -174,8 +174,8 @@ importers:
   packages/create-loafy:
     dependencies:
       loafy:
-        specifier: 1.1.3-canary.3
-        version: 1.1.3-canary.3
+        specifier: 1.1.3-canary.4
+        version: 1.1.3-canary.4
 
   packages/loafy:
     dependencies:
@@ -2026,8 +2026,8 @@ packages:
     resolution: {integrity: sha512-xi6IyHML+c9+Q3W0S4fCQJOym42pyurFiJUHEcEyHS0CeKzia4yZDEsLlqOFykxOdHpNy0NmvVO31vcSqAxJCg==}
     engines: {node: '>= 12.0.0'}
 
-  loafy@1.1.3-canary.3:
-    resolution: {integrity: sha512-tWt5l21Tykncm+suNT8eUna716jG/KhsBTNq40+RkHJq/jzziMRv7l3fTYs+LkCK0/hcmUJp6fhHOkDxQilGiw==}
+  loafy@1.1.3-canary.4:
+    resolution: {integrity: sha512-mbrfW7HV0WMmrpLVzn6jk8zpXWnPFuwO8N/sjt9Hmi0AjPHQKNn118A597Z8vONEtnvFJ5Pa0WdZswRhpIPa1Q==}
     hasBin: true
 
   locate-path@6.0.0:
@@ -4485,7 +4485,7 @@ snapshots:
       lightningcss-win32-arm64-msvc: 1.30.1
       lightningcss-win32-x64-msvc: 1.30.1
 
-  loafy@1.1.3-canary.3:
+  loafy@1.1.3-canary.4:
     dependencies:
       commander: 14.0.0
       conf: 14.0.0

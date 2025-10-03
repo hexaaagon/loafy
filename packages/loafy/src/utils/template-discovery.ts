@@ -210,8 +210,23 @@ async function discoverProductionPackages(
     )
     .map((dirent: Dirent) => join(loafyDir, dirent.name));
 
+  if (process.env.VERBOSE || process.env.DEBUG) {
+    console.log("Scanning @loafy directory:", loafyDir);
+    const foundDirs = readdirSync(loafyDir, { withFileTypes: true })
+      .filter(d => d.isDirectory())
+      .map(d => d.name);
+    console.log("Found package directories:", foundDirs);
+  }
+
   for (const packageDir of packageDirs) {
     const configPath = join(packageDir, "config.json");
+    const packageName = basename(packageDir);
+
+    if (process.env.VERBOSE || process.env.DEBUG) {
+      console.log(`\nChecking package: ${packageName}`);
+      console.log(`  Config path: ${configPath}`);
+      console.log(`  Config exists: ${existsSync(configPath)}`);
+    }
 
     if (!existsSync(configPath)) {
       continue;
@@ -219,7 +234,6 @@ async function discoverProductionPackages(
 
     try {
       const config = await loadConfig(configPath);
-      const packageName = basename(packageDir);
 
       // Determine package type by name prefix
       if (
@@ -229,6 +243,12 @@ async function discoverProductionPackages(
         packageName === "expo"
       ) {
         const templatesPath = join(packageDir, "templates");
+
+        if (process.env.VERBOSE || process.env.DEBUG) {
+          console.log(`  Identified as template package`);
+          console.log(`  Templates path: ${templatesPath}`);
+          console.log(`  Templates exists: ${existsSync(templatesPath)}`);
+        }
 
         if (!existsSync(templatesPath)) {
           console.warn(
@@ -245,6 +265,10 @@ async function discoverProductionPackages(
           ready: config.ready,
           path: templatesPath,
         });
+
+        if (process.env.VERBOSE || process.env.DEBUG) {
+          console.log(`  ✓ Added template: ${config.title}`);
+        }
       } else if (packageName.startsWith("categories-")) {
         // Categories package: @loafy/categories-web
         const categoriesDir = join(packageDir, "categories");
