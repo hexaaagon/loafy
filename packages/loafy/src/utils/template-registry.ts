@@ -23,7 +23,7 @@ export const AVAILABLE_TEMPLATES: Omit<BaseTemplate, "path">[] = [
 
 /**
  * Get builder package names for a template
- * 
+ *
  * NOTE: Versions are automatically updated by CI/CD workflows when builders are published
  */
 export function getBuilderPackages(templateName: string): {
