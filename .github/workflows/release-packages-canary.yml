@@ -1,4 +1,4 @@
-name: Release Canary
+name: Release Packages (Canary)
 
 on:
   workflow_dispatch:
