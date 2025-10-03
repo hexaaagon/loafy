@@ -1,0 +1,337 @@
+name: Validate Builders
+
+on:
+  pull_request:
+    paths:
+      - 'builders/**'
+  push:
+    branches:
+      - main
+    paths:
+      - 'builders/**'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Validate builders structure
+        run: |
+          echo "🔍 Validating builders packages..."
+          
+          errors=0
+          warnings=0
+          
+          # Function to validate a package
+          validate_package() {
+            local pkg_dir=$1
+            local pkg_type=$2
+            
+            echo ""
+            echo "Validating: $pkg_dir"
+            
+            # Check config.json exists
+            if [ ! -f "$pkg_dir/config.json" ]; then
+              echo "  ❌ Missing config.json"
+              ((errors++))
+              return
+            fi
+            
+            # Validate config.json is valid JSON
+            if ! jq empty "$pkg_dir/config.json" 2>/dev/null; then
+              echo "  ❌ Invalid JSON in config.json"
+              ((errors++))
+              return
+            fi
+            
+            # Check required fields in config.json
+            local required_fields=("id" "appUuid" "title" "description" "ready")
+            for field in "${required_fields[@]}"; do
+              if ! jq -e ".$field" "$pkg_dir/config.json" > /dev/null 2>&1; then
+                echo "  ❌ Missing required field: $field"
+                ((errors++))
+              fi
+            done
+            
+            # Check package.json exists
+            if [ ! -f "$pkg_dir/package.json" ]; then
+              echo "  ❌ Missing package.json"
+              ((errors++))
+              return
+            fi
+            
+            # Validate package.json is valid JSON
+            if ! jq empty "$pkg_dir/package.json" 2>/dev/null; then
+              echo "  ❌ Invalid JSON in package.json"
+              ((errors++))
+              return
+            fi
+            
+            # Check package.json has required fields
+            local pkg_fields=("name" "version")
+            for field in "${pkg_fields[@]}"; do
+              if ! jq -e ".$field" "$pkg_dir/package.json" > /dev/null 2>&1; then
+                echo "  ❌ Missing required field in package.json: $field"
+                ((errors++))
+              fi
+            done
+            
+            # Check package name starts with @loafy/
+            local pkg_name=$(jq -r '.name' "$pkg_dir/package.json")
+            if [[ ! "$pkg_name" =~ ^@loafy/ ]]; then
+              echo "  ❌ Package name must start with @loafy/ (got: $pkg_name)"
+              ((errors++))
+            fi
+            
+            # Check templates directory exists for templates and packages
+            if [ "$pkg_type" == "template" ] || [ "$pkg_type" == "package" ]; then
+              if [ ! -d "$pkg_dir/templates" ]; then
+                echo "  ❌ Missing templates/ directory"
+                ((errors++))
+              fi
+            fi
+            
+            # Check categories directory exists for categories
+            if [ "$pkg_type" == "category" ]; then
+              if [ ! -d "$pkg_dir/categories" ]; then
+                echo "  ❌ Missing categories/ directory"
+                ((errors++))
+              else
+                # Validate category JSON files
+                for cat_file in "$pkg_dir/categories"/*.json; do
+                  if [ -f "$cat_file" ]; then
+                    if ! jq empty "$cat_file" 2>/dev/null; then
+                      echo "  ❌ Invalid JSON in category file: $(basename "$cat_file")"
+                      ((errors++))
+                    else
+                      # Check if it's an array
+                      if ! jq -e 'type == "array"' "$cat_file" > /dev/null 2>&1; then
+                        echo "  ❌ Category file must be an array: $(basename "$cat_file")"
+                        ((errors++))
+                      fi
+                      
+                      # Check each category has required fields
+                      local cat_count=$(jq 'length' "$cat_file")
+                      for ((i=0; i<cat_count; i++)); do
+                        local cat_fields=("id" "uuid" "title" "description" "order")
+                        for field in "${cat_fields[@]}"; do
+                          if ! jq -e ".[$i].$field" "$cat_file" > /dev/null 2>&1; then
+                            echo "  ❌ Category $i missing field: $field in $(basename "$cat_file")"
+                            ((errors++))
+                          fi
+                        done
+                      done
+                    fi
+                  fi
+                done
+              fi
+            fi
+            
+            # Check if ready flag is set correctly for package addons
+            if [ "$pkg_type" == "package" ]; then
+              local ready=$(jq -r '.ready' "$pkg_dir/config.json")
+              local has_base=$(jq -e '.baseTemplate' "$pkg_dir/config.json" > /dev/null 2>&1 && echo "true" || echo "false")
+              local has_base_uuid=$(jq -e '.baseTemplateUuid' "$pkg_dir/config.json" > /dev/null 2>&1 && echo "true" || echo "false")
+              local has_category=$(jq -e '.category' "$pkg_dir/config.json" > /dev/null 2>&1 && echo "true" || echo "false")
+              local has_category_uuid=$(jq -e '.categoryUuid' "$pkg_dir/config.json" > /dev/null 2>&1 && echo "true" || echo "false")
+              
+              if [ "$has_base" == "false" ]; then
+                echo "  ❌ Package addon missing baseTemplate field"
+                ((errors++))
+              fi
+              
+              if [ "$has_base_uuid" == "false" ]; then
+                echo "  ⚠️  Package addon missing baseTemplateUuid field"
+                ((warnings++))
+              fi
+              
+              if [ "$has_category" == "false" ]; then
+                echo "  ❌ Package addon missing category field"
+                ((errors++))
+              fi
+              
+              if [ "$has_category_uuid" == "false" ]; then
+                echo "  ⚠️  Package addon missing categoryUuid field"
+                ((warnings++))
+              fi
+            fi
+            
+            # Check UUIDs are valid format
+            local uuid=$(jq -r '.appUuid // .uuid // empty' "$pkg_dir/config.json")
+            if [ -n "$uuid" ]; then
+              if [[ ! "$uuid" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ ]]; then
+                echo "  ❌ Invalid UUID format: $uuid"
+                ((errors++))
+              fi
+            fi
+            
+            echo "  ✅ Validation passed"
+          }
+          
+          # Validate templates
+          echo "📦 Validating templates..."
+          for dir in builders/template/*/; do
+            if [[ "$(basename "$dir")" != _* ]]; then
+              validate_package "$dir" "template"
+            fi
+          done
+          
+          # Validate package addons
+          echo ""
+          echo "🔌 Validating package addons..."
+          for dir in builders/packages/*/*/; do
+            if [[ "$(basename "$(dirname "$dir")")" != _* ]] && [[ "$(basename "$dir")" != _* ]]; then
+              validate_package "$dir" "package"
+            fi
+          done
+          
+          # Validate categories
+          echo ""
+          echo "📂 Validating categories..."
+          for dir in builders/categories/*/; do
+            if [[ "$(basename "$dir")" != _* ]]; then
+              validate_package "$dir" "category"
+            fi
+          done
+          
+          # Summary
+          echo ""
+          echo "=================================="
+          echo "📊 Validation Summary"
+          echo "=================================="
+          echo "Errors: $errors"
+          echo "Warnings: $warnings"
+          
+          if [ $errors -gt 0 ]; then
+            echo ""
+            echo "❌ Validation failed with $errors error(s)"
+            exit 1
+          elif [ $warnings -gt 0 ]; then
+            echo ""
+            echo "⚠️  Validation passed with $warnings warning(s)"
+            exit 0
+          else
+            echo ""
+            echo "✅ All validations passed!"
+            exit 0
+          fi
+
+      - name: Check for duplicate UUIDs
+        run: |
+          echo "🔍 Checking for duplicate UUIDs..."
+          
+          # Extract all UUIDs
+          uuids=$(find builders -name "config.json" -o -name "*.json" | xargs jq -r '
+            if type == "object" then
+              .appUuid // .uuid // empty
+            elif type == "array" then
+              .[] | .uuid // empty
+            else
+              empty
+            end
+          ' 2>/dev/null | sort)
+          
+          # Check for duplicates
+          duplicates=$(echo "$uuids" | uniq -d)
+          
+          if [ -n "$duplicates" ]; then
+            echo "❌ Found duplicate UUIDs:"
+            echo "$duplicates"
+            exit 1
+          else
+            echo "✅ No duplicate UUIDs found"
+          fi
+
+      - name: Check package naming conventions
+        run: |
+          echo "🔍 Checking package naming conventions..."
+          
+          errors=0
+          
+          # Check templates
+          for dir in builders/template/*/; do
+            if [[ "$(basename "$dir")" != _* ]]; then
+              pkg_name=$(jq -r '.name' "$dir/package.json" 2>/dev/null)
+              dir_name=$(basename "$dir")
+              
+              # Template packages should be @loafy/{dir_name}
+              expected="@loafy/$dir_name"
+              
+              if [ "$pkg_name" != "$expected" ]; then
+                echo "  ⚠️  Template $dir_name has package name $pkg_name (expected: $expected)"
+                ((errors++))
+              fi
+            fi
+          done
+          
+          # Check package addons
+          for dir in builders/packages/*/*/; do
+            if [[ "$(basename "$(dirname "$dir")")" != _* ]] && [[ "$(basename "$dir")" != _* ]]; then
+              pkg_name=$(jq -r '.name' "$dir/package.json" 2>/dev/null)
+              framework=$(basename "$(dirname "$dir")")
+              addon=$(basename "$dir")
+              
+              # Package addons should be @loafy/{framework}-{addon} or @loafy/packages-{framework}-{addon}
+              expected1="@loafy/$framework-$addon"
+              expected2="@loafy/packages-$framework-$addon"
+              
+              if [ "$pkg_name" != "$expected1" ] && [ "$pkg_name" != "$expected2" ]; then
+                echo "  ⚠️  Package $framework/$addon has package name $pkg_name (expected: $expected1 or $expected2)"
+                ((errors++))
+              fi
+            fi
+          done
+          
+          # Check categories
+          for dir in builders/categories/*/; do
+            if [[ "$(basename "$dir")" != _* ]]; then
+              pkg_name=$(jq -r '.name' "$dir/package.json" 2>/dev/null)
+              dir_name=$(basename "$dir")
+              
+              # Category packages should be @loafy/categories-{dir_name}
+              expected="@loafy/categories-$dir_name"
+              
+              if [ "$pkg_name" != "$expected" ]; then
+                echo "  ⚠️  Category $dir_name has package name $pkg_name (expected: $expected)"
+                ((errors++))
+              fi
+            fi
+          done
+          
+          if [ $errors -gt 0 ]; then
+            echo ""
+            echo "⚠️  Found $errors naming convention issue(s)"
+            echo "These are warnings and won't fail the build"
+          else
+            echo "✅ All package names follow conventions"
+          fi

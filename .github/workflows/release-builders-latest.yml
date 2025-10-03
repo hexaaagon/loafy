@@ -1,0 +1,362 @@
+name: Release Builders (Latest)
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish_scope:
+        description: 'What to publish'
+        required: true
+        default: 'changed'
+        type: choice
+        options:
+          - changed          # Only changed packages (auto-detect)
+          - all              # All builders packages
+          - templates        # All base templates
+          - packages         # All package addons
+          - categories       # All category packages
+          - custom           # Manual selection
+      
+      version_type:
+        description: 'Version bump type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch  # 0.0.x (bug fixes)
+          - minor  # 0.x.0 (new features)
+          - major  # x.0.0 (breaking changes)
+      
+      custom_packages:
+        description: 'Comma-separated package dirs (for custom mode, e.g., "template/nextjs,packages/nextjs/eslint")'
+        required: false
+        type: string
+      
+      dry_run:
+        description: 'Dry run (skip actual publishing)'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  detect-and-publish:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Discover builders packages
+        id: discover
+        run: |
+          echo "Discovering builders packages..."
+          
+          # Function to get package info
+          get_package_info() {
+            local pkg_dir=$1
+            local config_file="$pkg_dir/config.json"
+            local package_file="$pkg_dir/package.json"
+            
+            if [ ! -f "$config_file" ] || [ ! -f "$package_file" ]; then
+              return 1
+            fi
+            
+            # Check if ready
+            local ready=$(jq -r '.ready // false' "$config_file")
+            if [ "$ready" != "true" ]; then
+              return 1
+            fi
+            
+            # Get package name and version
+            local name=$(jq -r '.name' "$package_file")
+            local version=$(jq -r '.version' "$package_file")
+            
+            echo "$pkg_dir|$name|$version"
+          }
+          
+          # Discover all packages
+          packages=()
+          
+          # Base templates
+          for dir in builders/template/*/; do
+            if [[ "$(basename "$dir")" != _* ]]; then
+              info=$(get_package_info "$dir")
+              [ $? -eq 0 ] && packages+=("$info")
+            fi
+          done
+          
+          # Package addons (nested structure: builders/packages/framework/package/)
+          for dir in builders/packages/*/*/; do
+            if [[ "$(basename "$(dirname "$dir")")" != _* ]] && [[ "$(basename "$dir")" != _* ]]; then
+              info=$(get_package_info "$dir")
+              [ $? -eq 0 ] && packages+=("$info")
+            fi
+          done
+          
+          # Categories
+          for dir in builders/categories/*/; do
+            if [[ "$(basename "$dir")" != _* ]]; then
+              info=$(get_package_info "$dir")
+              [ $? -eq 0 ] && packages+=("$info")
+            fi
+          done
+          
+          # Save all packages
+          printf '%s\n' "${packages[@]}" > all_packages.txt
+          echo "Found ${#packages[@]} ready packages"
+          cat all_packages.txt
+
+      - name: Detect changed packages
+        id: changes
+        run: |
+          # Get last release tag
+          LAST_TAG=$(git tag --sort=-version:refname | grep -E '^builders/' | head -n 1)
+          
+          if [ -z "$LAST_TAG" ]; then
+            echo "No previous builders release found, will publish all packages"
+            cp all_packages.txt changed_packages.txt
+          else
+            echo "Last builders release: $LAST_TAG"
+            
+            # Get changed files since last tag
+            changed_files=$(git diff --name-only "$LAST_TAG" HEAD | grep '^builders/')
+            
+            # Filter packages that have changes
+            > changed_packages.txt
+            while IFS='|' read -r pkg_dir pkg_name pkg_version; do
+              if echo "$changed_files" | grep -q "^$pkg_dir/"; then
+                echo "$pkg_dir|$pkg_name|$pkg_version" >> changed_packages.txt
+              fi
+            done < all_packages.txt
+          fi
+          
+          echo "Changed packages:"
+          cat changed_packages.txt
+
+      - name: Select packages to publish
+        id: select
+        run: |
+          scope="${{ github.event.inputs.publish_scope }}"
+          
+          case "$scope" in
+            all)
+              echo "Publishing all packages"
+              cp all_packages.txt selected_packages.txt
+              ;;
+            changed)
+              echo "Publishing changed packages"
+              cp changed_packages.txt selected_packages.txt
+              ;;
+            templates)
+              echo "Publishing all templates"
+              grep '^builders/template/' all_packages.txt > selected_packages.txt || touch selected_packages.txt
+              ;;
+            packages)
+              echo "Publishing all package addons"
+              grep '^builders/packages/' all_packages.txt > selected_packages.txt || touch selected_packages.txt
+              ;;
+            categories)
+              echo "Publishing all categories"
+              grep '^builders/categories/' all_packages.txt > selected_packages.txt || touch selected_packages.txt
+              ;;
+            custom)
+              echo "Custom selection: ${{ github.event.inputs.custom_packages }}"
+              > selected_packages.txt
+              IFS=',' read -ra DIRS <<< "${{ github.event.inputs.custom_packages }}"
+              for dir in "${DIRS[@]}"; do
+                dir=$(echo "$dir" | xargs)  # trim whitespace
+                grep "^builders/$dir|" all_packages.txt >> selected_packages.txt || true
+              done
+              ;;
+          esac
+          
+          count=$(wc -l < selected_packages.txt)
+          echo "Selected $count packages to publish"
+          cat selected_packages.txt
+          
+          if [ "$count" -eq 0 ]; then
+            echo "No packages selected for publishing"
+            echo "HAS_PACKAGES=false" >> $GITHUB_OUTPUT
+          else
+            echo "HAS_PACKAGES=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Bump versions
+        if: steps.select.outputs.HAS_PACKAGES == 'true'
+        id: bump
+        run: |
+          version_type="${{ github.event.inputs.version_type }}"
+          
+          echo "Bumping versions (type: $version_type)"
+          > version_changes.txt
+          
+          while IFS='|' read -r pkg_dir pkg_name pkg_version; do
+            cd "$pkg_dir"
+            
+            echo "Processing $pkg_name (current: $pkg_version)"
+            
+            # Bump version
+            new_version=$(npm version "$version_type" --no-git-tag-version)
+            new_version=${new_version#v}  # Remove 'v' prefix
+            
+            echo "$pkg_dir|$pkg_name|$pkg_version|$new_version" >> ../../version_changes.txt
+            echo "  Bumped to: $new_version"
+            
+            cd - > /dev/null
+          done < selected_packages.txt
+          
+          echo "Version changes:"
+          cat version_changes.txt
+
+      - name: Commit version changes
+        if: steps.select.outputs.HAS_PACKAGES == 'true' && github.event.inputs.dry_run != 'true'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          # Add all changed package.json files
+          while IFS='|' read -r pkg_dir pkg_name old_version new_version; do
+            git add "$pkg_dir/package.json"
+          done < version_changes.txt
+          
+          git commit -m "chore(builders): bump versions to latest"
+          git push
+
+      - name: Create tags
+        if: steps.select.outputs.HAS_PACKAGES == 'true' && github.event.inputs.dry_run != 'true'
+        run: |
+          while IFS='|' read -r pkg_dir pkg_name old_version new_version; do
+            tag="$pkg_name@$new_version"
+            echo "Creating tag: $tag"
+            git tag "$tag"
+          done < version_changes.txt
+          
+          git push --tags
+
+      - name: Publish to npm
+        if: steps.select.outputs.HAS_PACKAGES == 'true' && github.event.inputs.dry_run != 'true'
+        run: |
+          while IFS='|' read -r pkg_dir pkg_name old_version new_version; do
+            echo "Publishing $pkg_name@$new_version"
+            cd "$pkg_dir"
+            
+            # Publish to npm
+            npm publish --access public
+            
+            cd - > /dev/null
+          done < version_changes.txt
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Generate release notes
+        if: steps.select.outputs.HAS_PACKAGES == 'true' && github.event.inputs.dry_run != 'true'
+        id: release_notes
+        run: |
+          cat > release_notes.md << EOF
+          ## Builders Packages Release
+          
+          ### Published Packages
+          
+          EOF
+          
+          while IFS='|' read -r pkg_dir pkg_name old_version new_version; do
+            echo "- **$pkg_name**: \`$old_version\` → \`$new_version\`" >> release_notes.md
+          done < version_changes.txt
+          
+          cat >> release_notes.md << EOF
+          
+          ### Installation
+          
+          \`\`\`bash
+          EOF
+          
+          while IFS='|' read -r pkg_dir pkg_name old_version new_version; do
+            echo "npm install $pkg_name@$new_version" >> release_notes.md
+          done < version_changes.txt
+          
+          echo "\`\`\`" >> release_notes.md
+          
+          cat release_notes.md
+
+      - name: Create GitHub Release
+        if: steps.select.outputs.HAS_PACKAGES == 'true' && github.event.inputs.dry_run != 'true'
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: "builders/v${{ github.run_number }}"
+          release_name: "Builders Release #${{ github.run_number }}"
+          body_path: release_notes.md
+          draft: false
+          prerelease: false
+
+      - name: Summary
+        if: steps.select.outputs.HAS_PACKAGES == 'true'
+        run: |
+          echo "## 🎉 Release Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Published Packages" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Package | Old Version | New Version |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|-------------|-------------|" >> $GITHUB_STEP_SUMMARY
+          
+          while IFS='|' read -r pkg_dir pkg_name old_version new_version; do
+            echo "| \`$pkg_name\` | $old_version | $new_version |" >> $GITHUB_STEP_SUMMARY
+          done < version_changes.txt
+          
+          if [ "${{ github.event.inputs.dry_run }}" == "true" ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "⚠️ **DRY RUN** - No changes were actually published" >> $GITHUB_STEP_SUMMARY
+          fi
