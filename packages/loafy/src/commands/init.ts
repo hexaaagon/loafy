@@ -64,6 +64,12 @@ export async function initProject(options: {
   verbose?: boolean;
 }) {
   try {
+    // Enable verbose/debug mode if requested
+    if (options.verbose) {
+      process.env.VERBOSE = "true";
+      process.env.DEBUG = "true";
+    }
+
     // Step 1: Show available templates from registry (hardcoded list)
     const templatesFromRegistry = AVAILABLE_TEMPLATES.map((t) => ({
       ...t,

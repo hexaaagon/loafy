@@ -3,33 +3,52 @@ import { promisify } from "util";
 import { consola } from "consola";
 import type { PackageManager } from "../helpers/get-pkg-manager.js";
 import { existsSync } from "fs";
-import { join } from "path";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
 import { getBuilderPackages } from "./template-registry.js";
 
 const execAsync = promisify(exec);
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/**
+ * Get the directory where builders should be installed
+ * This should be relative to the CLI's installation location
+ */
+function getInstallDirectory(): string {
+  // Install in the CLI's node_modules directory
+  // This works for both global installs and local node_modules
+  return join(__dirname, "..", "..", "..");
+}
 
 /**
  * Check if a builder package is already installed
  */
 export function isBuilderInstalled(packageName: string): boolean {
-  try {
-    // Check in node_modules
-    const nodeModulesPath = join(
-      process.cwd(),
+  const possibleLocations = [
+    // Check in current working directory
+    join(process.cwd(), "node_modules", ...packageName.split("/")),
+    // Check in CLI's node_modules
+    join(
+      __dirname,
+      "..",
+      "..",
+      "..",
       "node_modules",
       ...packageName.split("/")
-    );
-    if (existsSync(nodeModulesPath)) {
-      return true;
-    }
+    ),
+    join(__dirname, "..", "node_modules", ...packageName.split("/")),
+  ];
 
-    // Check if we can resolve it
-    try {
-      require.resolve(packageName);
+  for (const location of possibleLocations) {
+    if (existsSync(location)) {
       return true;
-    } catch {
-      return false;
     }
+  }
+
+  // Try to resolve it as a last resort
+  try {
+    require.resolve(packageName);
+    return true;
   } catch {
     return false;
   }
@@ -54,20 +73,21 @@ export async function installBuilders(
   );
 
   try {
+    const installDir = getInstallDirectory();
     let installCommand: string;
 
     switch (packageManager) {
       case "npm":
-        installCommand = `npm install ${packagesToInstall.join(" ")} --save-dev`;
+        installCommand = `cd "${installDir}" && npm install ${packagesToInstall.join(" ")} --no-save`;
         break;
       case "yarn":
-        installCommand = `yarn add ${packagesToInstall.join(" ")} --dev`;
+        installCommand = `cd "${installDir}" && yarn add ${packagesToInstall.join(" ")} --ignore-workspace-root-check`;
         break;
       case "pnpm":
-        installCommand = `pnpm add ${packagesToInstall.join(" ")} --save-dev`;
+        installCommand = `cd "${installDir}" && pnpm add ${packagesToInstall.join(" ")} --no-save`;
         break;
       case "bun":
-        installCommand = `bun add ${packagesToInstall.join(" ")} --dev`;
+        installCommand = `cd "${installDir}" && bun add ${packagesToInstall.join(" ")} --no-save`;
         break;
       default:
         throw new Error(`Unsupported package manager: ${packageManager}`);
@@ -82,6 +102,16 @@ export async function installBuilders(
     consola.success(
       `Successfully installed builders: ${packagesToInstall.join(", ")}`
     );
+
+    // Log where the builders were installed for debugging
+    if (process.env.VERBOSE || process.env.DEBUG) {
+      console.log("Builders installed in:", installDir);
+      console.log("Checking if builders are now accessible:");
+      packagesToInstall.forEach((pkg) => {
+        const pkgName = pkg.split("@")[0]; // Remove version
+        console.log(`  - ${pkgName}:`, isBuilderInstalled(pkgName));
+      });
+    }
   } catch (error) {
     consola.error("Failed to install builders:", error);
     throw new Error(

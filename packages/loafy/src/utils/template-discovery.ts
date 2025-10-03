@@ -24,14 +24,24 @@ function getLoafyPackagesDir(): {
       path: join(__dirname, "..", "..", "..", "..", "builders"),
       mode: "development" as const,
     },
-    // Production: installed packages in node_modules
+    // Production: installed packages in current working directory node_modules
     {
       path: join(process.cwd(), "node_modules", "@loafy"),
       mode: "production" as const,
     },
-    // Production: CLI installed globally or in different location
+    // Production: CLI's own node_modules (when globally installed or via bun create)
     {
       path: join(__dirname, "..", "..", "..", "node_modules", "@loafy"),
+      mode: "production" as const,
+    },
+    // Production: One level up from CLI location (alternative global install)
+    {
+      path: join(__dirname, "..", "..", "..", "..", "node_modules", "@loafy"),
+      mode: "production" as const,
+    },
+    // Production: Resolve from the CLI's package location
+    {
+      path: join(__dirname, "..", "node_modules", "@loafy"),
       mode: "production" as const,
     },
   ];
@@ -214,6 +224,7 @@ async function discoverProductionPackages(
       // Determine package type by name prefix
       if (
         packageName.startsWith("template-") ||
+        packageName.startsWith("builders-") ||
         packageName === "nextjs" ||
         packageName === "expo"
       ) {
@@ -228,7 +239,7 @@ async function discoverProductionPackages(
 
         baseTemplates.push({
           id: config.id,
-          name: packageName.replace("template-", ""),
+          name: packageName.replace("template-", "").replace("builders-", ""),
           title: config.title,
           description: config.description,
           ready: config.ready,
@@ -311,6 +322,23 @@ export async function discoverTemplates(specifiedBuilders?: string[]): Promise<{
 
   // If no builders found, return empty arrays
   if (!loafyDir) {
+    if (process.env.VERBOSE || process.env.DEBUG) {
+      console.warn(
+        "Attempted to find @loafy builders in the following locations:"
+      );
+      console.warn("- " + join(process.cwd(), "builders"));
+      console.warn("- " + join(__dirname, "..", "..", "..", "..", "builders"));
+      console.warn("- " + join(process.cwd(), "node_modules", "@loafy"));
+      console.warn(
+        "- " + join(__dirname, "..", "..", "..", "node_modules", "@loafy")
+      );
+      console.warn(
+        "- " + join(__dirname, "..", "..", "..", "..", "node_modules", "@loafy")
+      );
+      console.warn("- " + join(__dirname, "..", "node_modules", "@loafy"));
+      console.warn("\nCurrent working directory:", process.cwd());
+      console.warn("CLI __dirname:", __dirname);
+    }
     console.warn(
       "No @loafy builders found. They will be installed when you select a template."
     );
@@ -318,6 +346,14 @@ export async function discoverTemplates(specifiedBuilders?: string[]): Promise<{
   }
 
   const { path: LOAFY_PACKAGES_DIR, mode } = loafyDir;
+
+  if (process.env.VERBOSE || process.env.DEBUG) {
+    console.log(
+      "Found @loafy packages in:",
+      LOAFY_PACKAGES_DIR,
+      `(${mode} mode)`
+    );
+  }
 
   try {
     if (mode === "development") {
