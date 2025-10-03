@@ -246,10 +246,11 @@ jobs:
           version_type="${{ github.event.inputs.version_type }}"
           
           echo "Bumping versions to canary (base type: $version_type)"
-          > version_changes.txt
+          WORKSPACE_ROOT=$(pwd)
+          version_changes=""
           
           while IFS='|' read -r pkg_dir pkg_name pkg_version; do
-            cd "$pkg_dir"
+            cd "$WORKSPACE_ROOT/$pkg_dir"
             
             echo "Processing $pkg_name (current: $pkg_version)"
             
@@ -283,13 +284,24 @@ jobs:
               node -e "const fs=require('fs');const pkg=JSON.parse(fs.readFileSync('package.json','utf8'));pkg.version='$new_version';fs.writeFileSync('package.json',JSON.stringify(pkg,null,2)+'\n');"
             fi
             
-            echo "$pkg_dir|$pkg_name|$pkg_version|$new_version" >> ../../version_changes.txt
-            
-            cd - > /dev/null
+            version_changes="${version_changes}${pkg_dir}|${pkg_name}|${pkg_version}|${new_version}"$'\n'
           done < selected_packages.txt
           
+          cd "$WORKSPACE_ROOT"
+          
+          # Save to GITHUB_ENV for next steps
+          echo "VERSION_CHANGES<<EOF" >> $GITHUB_ENV
+          echo "$version_changes" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+          
           echo "Version changes:"
-          cat version_changes.txt
+          echo "$version_changes"
+
+      - name: Cleanup temporary files
+        if: steps.select.outputs.HAS_PACKAGES == 'true'
+        run: |
+          # Clean up temporary files before committing
+          rm -f all_packages.txt changed_packages.txt selected_packages.txt
 
       - name: Commit version changes
         if: steps.select.outputs.HAS_PACKAGES == 'true' && github.event.inputs.dry_run != 'true'
@@ -300,10 +312,7 @@ jobs:
           # Add all changed package.json files
           while IFS='|' read -r pkg_dir pkg_name old_version new_version; do
             git add "$pkg_dir/package.json"
-          done < version_changes.txt
-          
-          # Clean up temporary files
-          rm -f all_packages.txt changed_packages.txt selected_packages.txt version_changes.txt
+          done <<< "$VERSION_CHANGES"
           
           git commit -m "chore(builders): bump versions to canary"
           git push
@@ -315,7 +324,7 @@ jobs:
             tag="$pkg_name@$new_version"
             echo "Creating tag: $tag"
             git tag "$tag"
-          done < version_changes.txt
+          done <<< "$VERSION_CHANGES"
           
           git push --tags
 
@@ -349,7 +358,7 @@ jobs:
           
           while IFS='|' read -r pkg_dir pkg_name old_version new_version; do
             echo "- **$pkg_name**: \`$old_version\` → \`$new_version\`" >> release_notes.md
-          done < version_changes.txt
+          done <<< "$VERSION_CHANGES"
           
           cat >> release_notes.md << EOF
           
@@ -362,7 +371,7 @@ jobs:
           
           while IFS='|' read -r pkg_dir pkg_name old_version new_version; do
             echo "npm install $pkg_name@canary" >> release_notes.md
-          done < version_changes.txt
+          done <<< "$VERSION_CHANGES"
           
           cat >> release_notes.md << EOF
           \`\`\`
@@ -374,7 +383,7 @@ jobs:
           
           while IFS='|' read -r pkg_dir pkg_name old_version new_version; do
             echo "npm install $pkg_name@$new_version" >> release_notes.md
-          done < version_changes.txt
+          done <<< "$VERSION_CHANGES"
           
           echo "\`\`\`" >> release_notes.md
           
@@ -392,7 +401,7 @@ jobs:
           
           while IFS='|' read -r pkg_dir pkg_name old_version new_version; do
             echo "| \`$pkg_name\` | $old_version | $new_version |" >> $GITHUB_STEP_SUMMARY
-          done < version_changes.txt
+          done <<< "$VERSION_CHANGES"
           
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Installation" >> $GITHUB_STEP_SUMMARY
@@ -401,7 +410,7 @@ jobs:
           
           while IFS='|' read -r pkg_dir pkg_name old_version new_version; do
             echo "npm install $pkg_name@canary" >> $GITHUB_STEP_SUMMARY
-          done < version_changes.txt
+          done <<< "$VERSION_CHANGES"
           
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           

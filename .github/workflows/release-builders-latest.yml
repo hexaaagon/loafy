@@ -247,7 +247,7 @@ jobs:
           
           echo "Bumping versions (type: $version_type)"
           WORKSPACE_ROOT=$(pwd)
-          > version_changes.txt
+          version_changes=""
           
           while IFS='|' read -r pkg_dir pkg_name pkg_version; do
             echo "Processing $pkg_name (current: $pkg_version)"
@@ -275,11 +275,22 @@ jobs:
               echo "  Bumped to: $new_version"
             fi
             
-            echo "$pkg_dir|$pkg_name|$pkg_version|$new_version" >> version_changes.txt
+            version_changes="${version_changes}${pkg_dir}|${pkg_name}|${pkg_version}|${new_version}"$'\n'
           done < selected_packages.txt
           
+          # Save to GITHUB_ENV for next steps
+          echo "VERSION_CHANGES<<EOF" >> $GITHUB_ENV
+          echo "$version_changes" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+          
           echo "Version changes:"
-          cat version_changes.txt
+          echo "$version_changes"
+
+      - name: Cleanup temporary files
+        if: steps.select.outputs.HAS_PACKAGES == 'true'
+        run: |
+          # Clean up temporary files before committing
+          rm -f all_packages.txt changed_packages.txt selected_packages.txt
 
       - name: Commit version changes
         if: steps.select.outputs.HAS_PACKAGES == 'true' && github.event.inputs.dry_run != 'true'
@@ -290,10 +301,7 @@ jobs:
           # Add all changed package.json files
           while IFS='|' read -r pkg_dir pkg_name old_version new_version; do
             git add "$pkg_dir/package.json"
-          done < version_changes.txt
-          
-          # Clean up temporary files
-          rm -f all_packages.txt changed_packages.txt selected_packages.txt version_changes.txt
+          done <<< "$VERSION_CHANGES"
           
           git commit -m "chore(builders): bump versions to latest"
           git push
@@ -305,7 +313,7 @@ jobs:
             tag="$pkg_name@$new_version"
             echo "Creating tag: $tag"
             git tag "$tag"
-          done < version_changes.txt
+          done <<< "$VERSION_CHANGES"
           
           git push --tags
 
@@ -320,7 +328,7 @@ jobs:
             npm publish --access public
             
             cd - > /dev/null
-          done < version_changes.txt
+          done <<< "$VERSION_CHANGES"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
@@ -337,7 +345,7 @@ jobs:
           
           while IFS='|' read -r pkg_dir pkg_name old_version new_version; do
             echo "- **$pkg_name**: \`$old_version\` → \`$new_version\`" >> release_notes.md
-          done < version_changes.txt
+          done <<< "$VERSION_CHANGES"
           
           cat >> release_notes.md << EOF
           
@@ -348,7 +356,7 @@ jobs:
           
           while IFS='|' read -r pkg_dir pkg_name old_version new_version; do
             echo "npm install $pkg_name@$new_version" >> release_notes.md
-          done < version_changes.txt
+          done <<< "$VERSION_CHANGES"
           
           echo "\`\`\`" >> release_notes.md
           
@@ -378,7 +386,7 @@ jobs:
           
           while IFS='|' read -r pkg_dir pkg_name old_version new_version; do
             echo "| \`$pkg_name\` | $old_version | $new_version |" >> $GITHUB_STEP_SUMMARY
-          done < version_changes.txt
+          done <<< "$VERSION_CHANGES"
           
           if [ "${{ github.event.inputs.dry_run }}" == "true" ]; then
             echo "" >> $GITHUB_STEP_SUMMARY
