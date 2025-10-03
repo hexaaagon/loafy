@@ -1,5 +1,5 @@
 {
-  "name": "@loafy/packages-nextjs-eslint",
+  "name": "@loafy/packages-nextjs-biome",
   "version": "0.1.1",
   "description": "Package addon for Loafy CLI",
   "main": "index.js",
