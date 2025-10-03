@@ -85,14 +85,14 @@ jobs:
             # Check required fields in config.json
             local required_fields=("id" "title" "description" "ready")
             for field in "${required_fields[@]}"; do
-              if ! jq -e ".$field" "$pkg_dir/config.json" > /dev/null 2>&1; then
+              if ! jq -e "has(\"$field\")" "$pkg_dir/config.json" > /dev/null 2>&1; then
                 echo "  ❌ Missing required field: $field"
                 ((errors++))
               fi
             done
             
             # Check that either appUuid or uuid exists
-            if ! jq -e '.appUuid // .uuid' "$pkg_dir/config.json" > /dev/null 2>&1; then
+            if ! jq -e 'has("appUuid") or has("uuid")' "$pkg_dir/config.json" > /dev/null 2>&1; then
               echo "  ❌ Missing required field: appUuid or uuid"
               ((errors++))
             fi
