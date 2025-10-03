@@ -82,28 +82,44 @@ jobs:
       - name: Discover builders packages
         id: discover
         run: |
+          set -x  # Enable verbose mode
           echo "Discovering builders packages..."
+          echo "Current directory: $(pwd)"
+          echo "Listing builders directory:"
+          ls -la builders/ || echo "builders directory not found"
           
-          # Function to get package info
+          # Function to get package info using Node.js
           get_package_info() {
             local pkg_dir=$1
             local config_file="$pkg_dir/config.json"
             local package_file="$pkg_dir/package.json"
             
-            if [ ! -f "$config_file" ] || [ ! -f "$package_file" ]; then
+            echo "  Checking: $pkg_dir"
+            
+            if [ ! -f "$config_file" ]; then
+              echo "    Config not found: $config_file"
               return 1
             fi
             
-            # Check if ready
-            local ready=$(node -e "try { const config = require('./$config_file'); console.log(config.ready || false); } catch(e) { console.log(false); }")
+            if [ ! -f "$package_file" ]; then
+              echo "    Package.json not found: $package_file"
+              return 1
+            fi
+            
+            # Check if ready using Node.js with absolute path
+            local ready=$(node -e "const fs=require('fs'); const config=JSON.parse(fs.readFileSync('$config_file','utf8')); console.log(config.ready || false);" 2>&1)
+            echo "    Ready status: $ready"
+            
             if [ "$ready" != "true" ]; then
+              echo "    Package not ready, skipping"
               return 1
             fi
             
-            # Get package name and version
-            local name=$(node -e "const pkg = require('./$package_file'); console.log(pkg.name);")
-            local version=$(node -e "const pkg = require('./$package_file'); console.log(pkg.version);")
+            # Get package name and version using Node.js with absolute path
+            local name=$(node -e "const fs=require('fs'); const pkg=JSON.parse(fs.readFileSync('$package_file','utf8')); console.log(pkg.name);")
+            local version=$(node -e "const fs=require('fs'); const pkg=JSON.parse(fs.readFileSync('$package_file','utf8')); console.log(pkg.version);")
             
+            echo "    Found: $name@$version"
             echo "$pkg_dir|$name|$version"
           }
           
@@ -111,26 +127,35 @@ jobs:
           packages=()
           
           # Base templates
+          echo "Scanning base templates..."
           for dir in builders/template/*/; do
             if [[ "$(basename "$dir")" != _* ]]; then
-              info=$(get_package_info "$dir")
-              [ $? -eq 0 ] && packages+=("$info")
+              info=$(get_package_info "$dir" 2>&1 | tail -n 1)
+              if [[ $info == *"|"* ]]; then
+                packages+=("$info")
+              fi
             fi
           done
           
           # Package addons (nested structure: builders/packages/framework/package/)
+          echo "Scanning package addons..."
           for dir in builders/packages/*/*/; do
             if [[ "$(basename "$(dirname "$dir")")" != _* ]] && [[ "$(basename "$dir")" != _* ]]; then
-              info=$(get_package_info "$dir")
-              [ $? -eq 0 ] && packages+=("$info")
+              info=$(get_package_info "$dir" 2>&1 | tail -n 1)
+              if [[ $info == *"|"* ]]; then
+                packages+=("$info")
+              fi
             fi
           done
           
           # Categories
+          echo "Scanning categories..."
           for dir in builders/categories/*/; do
             if [[ "$(basename "$dir")" != _* ]]; then
-              info=$(get_package_info "$dir")
-              [ $? -eq 0 ] && packages+=("$info")
+              info=$(get_package_info "$dir" 2>&1 | tail -n 1)
+              if [[ $info == *"|"* ]]; then
+                packages+=("$info")
+              fi
             fi
           done
           
