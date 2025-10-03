@@ -15,7 +15,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 function getLoafyPackagesDir(): {
   path: string;
   mode: "development" | "production";
-} {
+} | null {
   const possibilities = [
     // Development: monorepo workspace builders directory
     { path: join(process.cwd(), "builders"), mode: "development" as const },
@@ -42,9 +42,8 @@ function getLoafyPackagesDir(): {
     }
   }
 
-  throw new Error(
-    `Loafy packages directory not found. Tried: ${possibilities.map((p) => p.path).join(", ")}`
-  );
+  // Return null instead of throwing - builders might not be installed yet
+  return null;
 }
 
 // Development mode: scan builders/ directory structure
@@ -218,7 +217,6 @@ async function discoverProductionPackages(
         packageName === "nextjs" ||
         packageName === "expo"
       ) {
-        // Base template package: @loafy/template-nextjs or @loafy/nextjs
         const templatesPath = join(packageDir, "templates");
 
         if (!existsSync(templatesPath)) {
@@ -247,7 +245,6 @@ async function discoverProductionPackages(
           continue;
         }
 
-        // Track this category package (remove "categories-" prefix)
         categoryPackages.push(packageName.replace("categories-", ""));
 
         const categoryFiles = await glob("*.json", {
@@ -269,7 +266,6 @@ async function discoverProductionPackages(
           }
         }
       } else {
-        // Package addon: @loafy/nextjs-auth, @loafy/nextjs-drizzle-postgres
         const templatesPath = join(packageDir, "templates");
 
         if (!existsSync(templatesPath)) {
@@ -311,7 +307,17 @@ export async function discoverTemplates(specifiedBuilders?: string[]): Promise<{
   const categories: Map<string, PackageCategory[]> = new Map();
   const categoryPackages: string[] = [];
 
-  const { path: LOAFY_PACKAGES_DIR, mode } = getLoafyPackagesDir();
+  const loafyDir = getLoafyPackagesDir();
+
+  // If no builders found, return empty arrays
+  if (!loafyDir) {
+    console.warn(
+      "No @loafy builders found. They will be installed when you select a template."
+    );
+    return { baseTemplates, packageAddons, categories, categoryPackages };
+  }
+
+  const { path: LOAFY_PACKAGES_DIR, mode } = loafyDir;
 
   try {
     if (mode === "development") {

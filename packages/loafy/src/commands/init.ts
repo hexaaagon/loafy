@@ -19,6 +19,8 @@ import type {
 import { validateNpmName } from "../utils/validate-pkg.js";
 import { isFolderEmpty } from "../utils/is-folder-empty.js";
 import { createProject } from "../utils/create-project.js";
+import { ensureBuildersInstalled } from "../utils/install-builders.js";
+import { AVAILABLE_TEMPLATES } from "../utils/template-registry.js";
 
 import type { PackageManager } from "../helpers/get-pkg-manager.js";
 import {
@@ -62,44 +64,14 @@ export async function initProject(options: {
   verbose?: boolean;
 }) {
   try {
-    const { baseTemplates, packageAddons, categories, categoryPackages } =
-      await discoverTemplates(options.builders);
+    // Step 1: Show available templates from registry (hardcoded list)
+    const templatesFromRegistry = AVAILABLE_TEMPLATES.map((t) => ({
+      ...t,
+      path: "", // Will be filled after builders are installed
+    }));
 
-    if (options.verbose) {
-      console.log("DISCOVERY DEBUG:");
-      console.log(
-        "- Base templates found:",
-        baseTemplates.length,
-        baseTemplates.map((t) => ({
-          name: t.name,
-          title: t.title,
-          ready: t.ready,
-        }))
-      );
-      console.log(
-        "- Package addons found:",
-        packageAddons.length,
-        packageAddons.map((p) => ({
-          name: p.name,
-          title: p.title,
-          ready: p.ready,
-          baseTemplate: p.baseTemplate,
-        }))
-      );
-      console.log(
-        "- Category packages loaded:",
-        categoryPackages.length,
-        categoryPackages
-      );
-      console.log(
-        "- Templates with categories:",
-        categories.size,
-        Array.from(categories.keys())
-      );
-    }
-
-    if (baseTemplates.length === 0) {
-      consola.error("No base templates found!");
+    if (templatesFromRegistry.length === 0) {
+      consola.error("No templates available!");
       process.exit(1);
     }
 
@@ -137,7 +109,6 @@ export async function initProject(options: {
     }
 
     // Resolve the project path and extract the directory name
-    // This handles cases like ".", "..", "../.." by using the actual directory name
     const appPath = resolve(projectPath);
     const appName = basename(appPath);
 
@@ -168,13 +139,76 @@ export async function initProject(options: {
       options.headless
     );
 
-    // Select base template
-    const selectedTemplate = await selectBaseTemplate(
-      baseTemplates,
+    // Step 2: Select base template from registry
+    const selectedTemplateFromRegistry = await selectBaseTemplate(
+      templatesFromRegistry,
       options.headless
     );
-    if (!selectedTemplate) {
+    if (!selectedTemplateFromRegistry) {
       consola.error("No template selected");
+      process.exit(1);
+    }
+
+    // Step 3: Ensure required builders are installed for the selected template
+    try {
+      await ensureBuildersInstalled(
+        selectedTemplateFromRegistry.name,
+        packageManager
+      );
+    } catch (error) {
+      consola.error("Failed to install required builders:", error);
+      consola.info(
+        "You can manually install the required packages and try again."
+      );
+      process.exit(1);
+    }
+
+    // Step 4: Now discover templates and packages from installed builders
+    const { baseTemplates, packageAddons, categories, categoryPackages } =
+      await discoverTemplates(options.builders);
+
+    if (options.verbose) {
+      console.log("DISCOVERY DEBUG:");
+      console.log(
+        "- Base templates found:",
+        baseTemplates.length,
+        baseTemplates.map((t) => ({
+          name: t.name,
+          title: t.title,
+          ready: t.ready,
+        }))
+      );
+      console.log(
+        "- Package addons found:",
+        packageAddons.length,
+        packageAddons.map((p) => ({
+          name: p.name,
+          title: p.title,
+          ready: p.ready,
+          baseTemplate: p.baseTemplate,
+        }))
+      );
+      console.log(
+        "- Category packages loaded:",
+        categoryPackages.length,
+        categoryPackages
+      );
+      console.log(
+        "- Templates with categories:",
+        categories.size,
+        Array.from(categories.keys())
+      );
+    }
+
+    // Find the actual template with path from discovered templates
+    const selectedTemplate = baseTemplates.find(
+      (t) => t.name === selectedTemplateFromRegistry.name
+    );
+
+    if (!selectedTemplate) {
+      consola.error(
+        `Failed to load template "${selectedTemplateFromRegistry.name}" after installing builders`
+      );
       process.exit(1);
     }
 
