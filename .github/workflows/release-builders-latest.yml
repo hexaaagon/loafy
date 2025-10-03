@@ -246,12 +246,13 @@ jobs:
           version_type="${{ github.event.inputs.version_type }}"
           
           echo "Bumping versions (type: $version_type)"
+          WORKSPACE_ROOT=$(pwd)
           > version_changes.txt
           
           while IFS='|' read -r pkg_dir pkg_name pkg_version; do
-            cd "$pkg_dir"
-            
             echo "Processing $pkg_name (current: $pkg_version)"
+            
+            pkg_json="$WORKSPACE_ROOT/$pkg_dir/package.json"
             
             # Check if current version is a canary/pre-release
             if [[ $pkg_version == *"-"* ]]; then
@@ -261,20 +262,20 @@ jobs:
               new_version=$(echo "$pkg_version" | sed 's/-.*$//')
               
               # Update to stable version (no bumping)
-              node -e "const fs=require('fs');const pkg=JSON.parse(fs.readFileSync('package.json','utf8'));pkg.version='$new_version';fs.writeFileSync('package.json',JSON.stringify(pkg,null,2)+'\n');"
+              node -e "const fs=require('fs');const pkg=JSON.parse(fs.readFileSync('$pkg_json','utf8'));pkg.version='$new_version';fs.writeFileSync('$pkg_json',JSON.stringify(pkg,null,2)+'\n');"
               
               echo "  Promoted to stable: $new_version"
             else
               # Stable to stable: bump version normally
+              cd "$pkg_dir"
               new_version=$(npm version "$version_type" --no-git-tag-version)
               new_version=${new_version#v}  # Remove 'v' prefix
+              cd "$WORKSPACE_ROOT"
               
               echo "  Bumped to: $new_version"
             fi
             
-            echo "$pkg_dir|$pkg_name|$pkg_version|$new_version" >> ../../version_changes.txt
-            
-            cd - > /dev/null
+            echo "$pkg_dir|$pkg_name|$pkg_version|$new_version" >> version_changes.txt
           done < selected_packages.txt
           
           echo "Version changes:"
@@ -290,6 +291,9 @@ jobs:
           while IFS='|' read -r pkg_dir pkg_name old_version new_version; do
             git add "$pkg_dir/package.json"
           done < version_changes.txt
+          
+          # Clean up temporary files
+          rm -f all_packages.txt changed_packages.txt selected_packages.txt version_changes.txt
           
           git commit -m "chore(builders): bump versions to latest"
           git push

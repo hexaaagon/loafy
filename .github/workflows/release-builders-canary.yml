@@ -302,6 +302,9 @@ jobs:
             git add "$pkg_dir/package.json"
           done < version_changes.txt
           
+          # Clean up temporary files
+          rm -f all_packages.txt changed_packages.txt selected_packages.txt version_changes.txt
+          
           git commit -m "chore(builders): bump versions to canary"
           git push
 
