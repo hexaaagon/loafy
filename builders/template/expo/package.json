@@ -1,5 +1,5 @@
 {
-  "name": "@loafy/builders-expo", 
+  "name": "@loafy/builders-expo",
   "version": "0.1.0",
   "description": "Expo application templates for Loafy CLI",
   "main": "dist/index.js",
@@ -12,8 +12,13 @@
     "build": "tsc",
     "dev": "tsc --watch"
   },
-  "keywords": ["loafy", "expo", "template", "builder"],
-  "license": "MIT",
+  "keywords": [
+    "loafy",
+    "expo",
+    "template",
+    "builder"
+  ],
+  "license": "Apache-2.0",
   "devDependencies": {
     "typescript": "^5.0.0"
   },

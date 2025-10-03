@@ -149,11 +149,7 @@ importers:
 
   builders/categories/_template-categories: {}
 
-  builders/categories/web:
-    devDependencies:
-      typescript:
-        specifier: ^5.0.0
-        version: 5.9.2
+  builders/categories/web: {}
 
   builders/packages/_template-package-addon: {}
 
@@ -173,15 +169,7 @@ importers:
         specifier: ^5.0.0
         version: 5.9.2
 
-  builders/template/nextjs:
-    dependencies:
-      uuid:
-        specifier: ^9.0.0
-        version: 9.0.1
-    devDependencies:
-      typescript:
-        specifier: ^5.0.0
-        version: 5.9.2
+  builders/template/nextjs: {}
 
   packages/create-loafy: {}
 

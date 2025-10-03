@@ -1,17 +1,21 @@
 {
   "name": "@loafy/packages-nextjs-biome",
   "version": "0.1.2",
-  "description": "Package addon for Loafy CLI",
+  "description": "Biome package addon for Next.js projects in Loafy CLI",
   "main": "index.js",
   "files": [
-    "templates/"
+    "config.json",
+    "templates/**/*"
   ],
+  "scripts": {},
   "keywords": [
     "loafy",
     "package",
     "addon",
-    "framework-name"
+    "nextjs",
+    "biome"
   ],
+  "license": "Apache-2.0",
   "dependencies": {},
   "devDependencies": {}
 }
