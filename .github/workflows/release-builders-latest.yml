@@ -278,8 +278,8 @@ jobs:
             version_changes="${version_changes}${pkg_dir}|${pkg_name}|${pkg_version}|${new_version}"$'\n'
           done < selected_packages.txt
           
-          # Save to temp file outside git repo for next steps
-          echo "$version_changes" > /tmp/version_changes.txt
+          # Remove trailing newline and save to temp file outside git repo
+          echo -n "$version_changes" | sed '$ s/$//' > /tmp/version_changes.txt
           
           echo "Version changes:"
           echo "$version_changes"
@@ -302,6 +302,12 @@ jobs:
           
           # Add all changed package.json files
           while IFS='|' read -r pkg_dir pkg_name old_version new_version; do
+            # Skip empty lines
+            [[ -z "$pkg_dir" ]] && continue
+            
+            # Remove trailing slash if present
+            pkg_dir="${pkg_dir%/}"
+            
             echo "  pkg_dir='$pkg_dir' pkg_name='$pkg_name' old_version='$old_version' new_version='$new_version'"
             echo "  Adding: $pkg_dir/package.json"
             git add "$pkg_dir/package.json"
