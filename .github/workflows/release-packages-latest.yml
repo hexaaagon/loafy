@@ -131,10 +131,13 @@ jobs:
           NEW_VERSION="${NEW_MAJOR}.${NEW_MINOR}.${NEW_PATCH}"
           echo "New version: $NEW_VERSION"
           
-          # Update package.json files
+          # Update loafy package.json
           npm version $NEW_VERSION --no-git-tag-version
+          
+          # Update create-loafy package.json (both version and loafy dependency)
           cd ../../packages/create-loafy
           npm version $NEW_VERSION --no-git-tag-version
+          node -e "const fs=require('fs');const pkg=JSON.parse(fs.readFileSync('package.json','utf8'));pkg.dependencies.loafy='$NEW_VERSION';fs.writeFileSync('package.json',JSON.stringify(pkg,null,2)+'\n');"
           
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_OUTPUT
 

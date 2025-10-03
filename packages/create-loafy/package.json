@@ -28,6 +28,9 @@
     "index.js",
     "README.md"
   ],
+  "dependencies": {
+    "loafy": "1.1.3-canary.1"
+  },
   "homepage": "https://github.com/hexaaagon/loafy",
   "repository": {
     "type": "git",

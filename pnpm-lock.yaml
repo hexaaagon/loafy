@@ -171,7 +171,11 @@ importers:
 
   builders/template/nextjs: {}
 
-  packages/create-loafy: {}
+  packages/create-loafy:
+    dependencies:
+      loafy:
+        specifier: 1.1.3-canary.1
+        version: 1.1.3-canary.1
 
   packages/loafy:
     dependencies:
@@ -2030,6 +2034,10 @@ packages:
   lightningcss@1.30.1:
     resolution: {integrity: sha512-xi6IyHML+c9+Q3W0S4fCQJOym42pyurFiJUHEcEyHS0CeKzia4yZDEsLlqOFykxOdHpNy0NmvVO31vcSqAxJCg==}
     engines: {node: '>= 12.0.0'}
+
+  loafy@1.1.3-canary.1:
+    resolution: {integrity: sha512-8phPVv41PH8R4TRjUJUWPuwJATu3lZOrJGVhbWpdRvuip1Cl220ApjUd0W81Jo26R0eXnpAcD/V+FauIFiWgug==}
+    hasBin: true
 
   locate-path@6.0.0:
     resolution: {integrity: sha512-iPZK6eYjbxRu3uB4/WZ3EsEIMJFMqAoopl3R+zuq0UjcAm/MO6KCweDgPfP3elTztoKP3KtnVHxTn2NHBSDVUw==}
@@ -4485,6 +4493,15 @@ snapshots:
       lightningcss-linux-x64-musl: 1.30.1
       lightningcss-win32-arm64-msvc: 1.30.1
       lightningcss-win32-x64-msvc: 1.30.1
+
+  loafy@1.1.3-canary.1:
+    dependencies:
+      commander: 14.0.0
+      conf: 14.0.0
+      consola: 3.4.2
+      glob: 11.0.3
+      prompts: 2.4.2
+      update-check: 1.5.4
 
   locate-path@6.0.0:
     dependencies:
