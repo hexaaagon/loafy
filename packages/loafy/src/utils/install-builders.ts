@@ -194,7 +194,10 @@ export async function installBuilders(
       console.log("Builders installed in:", installDir);
       console.log("Checking if builders are now accessible:");
       packagesToInstall.forEach((pkg) => {
-        const pkgName = pkg.split("@")[0]; // Remove version
+        // Extract package name from @loafy/builders-nextjs@^0.2.1
+        const pkgName = pkg.includes("@", 1)
+          ? pkg.substring(0, pkg.lastIndexOf("@")) // Remove version
+          : pkg; // No version specified
         console.log(`  - ${pkgName}:`, isBuilderInstalled(pkgName));
       });
     }

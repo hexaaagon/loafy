@@ -17,21 +17,24 @@ function getLoafyPackagesDir(): {
   path: string;
   mode: "development" | "production";
 } | null {
+  const cacheDir = join(
+    process.env.LOAFY_CACHE_DIR || join(homedir(), ".loafy", "builders"),
+    "node_modules",
+    "@loafy"
+  );
+
   const possibilities = [
-    // Development: monorepo workspace builders directory
+    // Development: monorepo workspace builders directory (highest priority for development)
     { path: join(process.cwd(), "builders"), mode: "development" as const },
     // Development: running from packages/loafy in monorepo
     {
       path: join(__dirname, "..", "..", "..", "..", "builders"),
       mode: "development" as const,
     },
-    // Production: Global cache directory (primary location for installed builders)
+    // Production: Global cache directory (HIGHEST PRIORITY for production - installed builders)
+    // This must be checked before CLI's own node_modules to avoid using bundled/stale builders
     {
-      path: join(
-        process.env.LOAFY_CACHE_DIR || join(homedir(), ".loafy", "builders"),
-        "node_modules",
-        "@loafy"
-      ),
+      path: cacheDir,
       mode: "production" as const,
     },
     // Production: installed packages in current working directory node_modules
@@ -40,26 +43,56 @@ function getLoafyPackagesDir(): {
       mode: "production" as const,
     },
     // Production: CLI's own node_modules (when globally installed or via bun create)
+    // Lower priority than cache to ensure fresh builders are used
+    // SKIP if we're running from a temp bunx directory to avoid using incomplete bundled builders
     {
       path: join(__dirname, "..", "..", "..", "node_modules", "@loafy"),
       mode: "production" as const,
+      skipIfTemp: true,
     },
     // Production: One level up from CLI location (alternative global install)
     {
       path: join(__dirname, "..", "..", "..", "..", "node_modules", "@loafy"),
       mode: "production" as const,
+      skipIfTemp: true,
     },
     // Production: Resolve from the CLI's package location
     {
       path: join(__dirname, "..", "node_modules", "@loafy"),
       mode: "production" as const,
+      skipIfTemp: true,
     },
   ];
 
+  // Check if we're running from a temp directory (bunx, npx, etc.)
+  const isTempDir =
+    __dirname.includes("Temp") ||
+    __dirname.includes("tmp") ||
+    __dirname.includes("bunx-") ||
+    __dirname.includes("npx-");
+
   for (const option of possibilities) {
+    // Skip CLI's own node_modules if we're in a temp directory
+    // This prevents using incomplete/bundled builders
+    if (option.skipIfTemp && isTempDir && option.path !== cacheDir) {
+      if (process.env.VERBOSE || process.env.DEBUG) {
+        console.log(`Skipping temp CLI directory: ${option.path}`);
+      }
+      continue;
+    }
+
     if (existsSync(option.path)) {
+      if (process.env.VERBOSE || process.env.DEBUG) {
+        console.log(
+          `Found @loafy packages in: ${option.path} (${option.mode} mode)`
+        );
+      }
       return option;
     }
+  }
+
+  if (process.env.VERBOSE || process.env.DEBUG) {
+    console.log("No @loafy packages found in any of the checked locations");
   }
 
   // Return null instead of throwing - builders might not be installed yet
