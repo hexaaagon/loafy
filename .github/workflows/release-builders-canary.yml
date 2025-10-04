@@ -394,18 +394,45 @@ jobs:
           while IFS='|' read -r pkg_dir pkg_name old_version new_version; do
             echo "Processing $pkg_name: $old_version → $new_version"
             
-            # Determine the template name from package name
+            # Create version range (^x.y.z)
+            version_range="^${new_version}"
+            
+            # Determine package type and update accordingly
             if [[ $pkg_name == "@loafy/builders-"* ]]; then
+              # Base template package
               template_name=$(echo "$pkg_name" | sed 's/@loafy\/builders-//')
+              echo "  Updating template version for $template_name to $version_range"
               
-              # Create version range (^x.y.z)
-              version_range="^${new_version}"
+              # Update template version in versions.template field
+              sed -i "/$template_name: {/,/},/ s/template: \"[^\"]*\", \/\/ AUTO-UPDATED by workflow/template: \"$version_range\", \/\/ AUTO-UPDATED by workflow/" "$REGISTRY_FILE"
               
-              echo "  Updating $template_name version to $version_range"
+            elif [[ $pkg_name == "@loafy/categories-"* ]]; then
+              # Categories package
+              category_name=$(echo "$pkg_name" | sed 's/@loafy\/categories-//')
+              echo "  Updating categories version for category $category_name to $version_range"
               
-              # Update the version in template-registry.ts using sed
-              # Match the template block and update its templateVersion line
-              sed -i "/$template_name: {/,/},/ s/templateVersion: \"[^\"]*\",/templateVersion: \"$version_range\", \/\/ AUTO-UPDATED by workflow/" "$REGISTRY_FILE"
+              # Find templates using this category and update their versions.categories field
+              # For web category
+              if [[ $category_name == "web" ]]; then
+                sed -i "/nextjs: {/,/},/ s/categories: \"[^\"]*\", \/\/ AUTO-UPDATED by workflow/categories: \"$version_range\", \/\/ AUTO-UPDATED by workflow/" "$REGISTRY_FILE"
+              fi
+              # For mobile category
+              if [[ $category_name == "mobile" ]]; then
+                sed -i "/expo: {/,/},/ s/categories: \"[^\"]*\", \/\/ AUTO-UPDATED by workflow/categories: \"$version_range\", \/\/ AUTO-UPDATED by workflow/" "$REGISTRY_FILE"
+              fi
+              # For monorepo category
+              if [[ $category_name == "monorepo" ]]; then
+                sed -i "/turborepo: {/,/},/ s/categories: \"[^\"]*\", \/\/ AUTO-UPDATED by workflow/categories: \"$version_range\", \/\/ AUTO-UPDATED by workflow/" "$REGISTRY_FILE"
+              fi
+              
+            elif [[ $pkg_name == "@loafy/packages-"* ]]; then
+              # Package addon
+              echo "  Updating package addon version for $pkg_name to $version_range"
+              
+              # Update in packageAddons record
+              # Escape special characters for sed
+              escaped_pkg_name=$(echo "$pkg_name" | sed 's/\//\\\//g')
+              sed -i "s/\"$escaped_pkg_name\": \"[^\"]*\", \/\/ AUTO-UPDATED by workflow/\"$pkg_name\": \"$version_range\", \/\/ AUTO-UPDATED by workflow/" "$REGISTRY_FILE"
             fi
           done < /tmp/version_changes.txt
           

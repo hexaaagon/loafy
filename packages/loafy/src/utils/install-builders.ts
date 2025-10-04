@@ -258,17 +258,17 @@ export async function ensureBuildersInstalled(
   templateName: string,
   packageManager: PackageManager
 ): Promise<void> {
-  const { template, categories, packageAddons, templateVersion } =
+  const { template, categories, packageAddons, versions } =
     getBuilderPackages(templateName);
 
   // For version-specific packages, append the version
   const templatePkg =
-    templateVersion && templateVersion !== "latest"
-      ? `${template}@${templateVersion}`
+    versions.template && versions.template !== "latest"
+      ? `${template}@${versions.template}`
       : template;
   const categoriesPkg =
-    templateVersion && templateVersion !== "latest"
-      ? `${categories}@${templateVersion}`
+    versions.categories && versions.categories !== "latest"
+      ? `${categories}@${versions.categories}`
       : categories;
 
   const packagesToCheck = [template, categories, ...packageAddons];
@@ -278,14 +278,24 @@ export async function ensureBuildersInstalled(
   for (let i = 0; i < packagesToCheck.length; i++) {
     const pkg = packagesToCheck[i];
     let needsInstall = false;
+    let pkgVersion: string;
 
-    if (pkg === template || pkg === categories) {
-      // Check version compatibility for template and categories
-      needsInstall = !isBuilderInstalled(pkg, templateVersion);
+    if (pkg === template) {
+      // Check version compatibility for template
+      pkgVersion = versions.template;
+      needsInstall = !isBuilderInstalled(pkg, pkgVersion);
+    } else if (pkg === categories) {
+      // Check version compatibility for categories
+      pkgVersion = versions.categories;
+      needsInstall = !isBuilderInstalled(pkg, pkgVersion);
     } else {
-      // Package addons - fetch latest version and check compatibility
-      const addonVersion = await getLatestPackageVersion(pkg);
-      needsInstall = !isBuilderInstalled(pkg, addonVersion);
+      // Package addons - use their specific version from registry
+      pkgVersion = versions.packageAddons[pkg] || "latest";
+      if (pkgVersion === "latest") {
+        // If not in registry, fetch latest from npm
+        pkgVersion = await getLatestPackageVersion(pkg);
+      }
+      needsInstall = !isBuilderInstalled(pkg, pkgVersion);
     }
 
     if (needsInstall) {
@@ -294,14 +304,10 @@ export async function ensureBuildersInstalled(
       } else if (pkg === categories) {
         packagesToInstall.push(categoriesPkg);
       } else {
-        // Package addon - fetch its own version from npm
-        const addonIndex = packageAddons.indexOf(pkg);
-        if (addonIndex !== -1) {
-          const addonVersion = await getLatestPackageVersion(pkg);
-          const addonPkg =
-            addonVersion !== "latest" ? `${pkg}@${addonVersion}` : pkg;
-          packagesToInstall.push(addonPkg);
-        }
+        // Package addon - use its specific version
+        const addonPkg =
+          pkgVersion !== "latest" ? `${pkg}@${pkgVersion}` : pkg;
+        packagesToInstall.push(addonPkg);
       }
     }
   }

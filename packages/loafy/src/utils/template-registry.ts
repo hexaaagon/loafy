@@ -38,7 +38,11 @@ export function getBuilderPackages(templateName: string): {
   template: string;
   categories: string;
   packageAddons: string[];
-  templateVersion: string;
+  versions: {
+    template: string;
+    categories: string;
+    packageAddons: Record<string, string>;
+  };
 } {
   const builderMap: Record<
     string,
@@ -46,7 +50,11 @@ export function getBuilderPackages(templateName: string): {
       template: string;
       categories: string;
       packageAddons: string[];
-      templateVersion: string;
+      versions: {
+        template: string;
+        categories: string;
+        packageAddons: Record<string, string>;
+      };
     }
   > = {
     nextjs: {
@@ -57,19 +65,35 @@ export function getBuilderPackages(templateName: string): {
         "@loafy/packages-nextjs-eslint",
         "@loafy/packages-nextjs-prettier-tailwind",
       ],
-      templateVersion: "^0.2.5", // AUTO-UPDATED by workflow // AUTO-UPDATED by workflow // AUTO-UPDATED by workflow // AUTO-UPDATED by workflow // AUTO-UPDATED by workflow
+      versions: {
+        template: "^0.2.5", // AUTO-UPDATED by workflow
+        categories: "^0.1.2", // AUTO-UPDATED by workflow
+        packageAddons: {
+          "@loafy/packages-nextjs-biome": "^0.1.2", // AUTO-UPDATED by workflow
+          "@loafy/packages-nextjs-eslint": "^0.1.2", // AUTO-UPDATED by workflow
+          "@loafy/packages-nextjs-prettier-tailwind": "^0.1.2", // AUTO-UPDATED by workflow
+        },
+      },
     },
     expo: {
       template: "@loafy/builders-expo",
       categories: "@loafy/categories-mobile",
       packageAddons: [],
-      templateVersion: "^0.1.5", // AUTO-UPDATED by workflow // AUTO-UPDATED by workflow // AUTO-UPDATED by workflow // AUTO-UPDATED by workflow // AUTO-UPDATED by workflow
+      versions: {
+        template: "^0.1.5", // AUTO-UPDATED by workflow
+        categories: "^0.1.2", // AUTO-UPDATED by workflow
+        packageAddons: {},
+      },
     },
     turborepo: {
       template: "@loafy/builders-turborepo",
       categories: "@loafy/categories-monorepo",
       packageAddons: [],
-      templateVersion: "^0.1.5", // AUTO-UPDATED by workflow // AUTO-UPDATED by workflow // AUTO-UPDATED by workflow // AUTO-UPDATED by workflow // AUTO-UPDATED by workflow
+      versions: {
+        template: "^0.1.5", // AUTO-UPDATED by workflow
+        categories: "^0.1.2", // AUTO-UPDATED by workflow
+        packageAddons: {},
+      },
     },
   };
 
@@ -78,7 +102,11 @@ export function getBuilderPackages(templateName: string): {
       template: `@loafy/builders-${templateName}`,
       categories: "@loafy/categories-web",
       packageAddons: [],
-      templateVersion: "latest",
+      versions: {
+        template: "latest",
+        categories: "latest",
+        packageAddons: {},
+      },
     }
   );
 }
