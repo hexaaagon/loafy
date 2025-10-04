@@ -39,8 +39,5 @@
   },
   "bugs": {
     "url": "https://github.com/hexaaagon/loafy/issues"
-  },
-  "dependencies": {
-    "loafy": "1.1.3-canary.8"
   }
 }
