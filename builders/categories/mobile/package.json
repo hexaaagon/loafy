@@ -10,5 +10,16 @@
     "loafy",
     "categories",
     "templates"
-  ]
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hexaaagon/loafy.git",
+    "directory": "builders/categories/web"
+  },
+  "bugs": {
+    "url": "https://github.com/hexaaagon/loafy/issues"
+  },
+  "homepage": "https://github.com/hexaaagon/loafy#readme",
+  "dependencies": {},
+  "devDependencies": {}
 }

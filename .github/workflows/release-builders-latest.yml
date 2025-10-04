@@ -159,8 +159,13 @@ jobs:
       - name: Detect changed packages
         id: changes
         run: |
-          # Get last release tag
-          LAST_TAG=$(git tag --sort=-version:refname | grep -E '^builders/' | head -n 1)
+          # Get last workflow-level release tag (prefer latest over canary)
+          LAST_TAG=$(git tag --sort=-version:refname | grep -E '^builders-latest-v[0-9]+$' | head -n 1)
+          
+          if [ -z "$LAST_TAG" ]; then
+            # Fallback to any workflow-level tag if no latest found
+            LAST_TAG=$(git tag --sort=-version:refname | grep -E '^builders-(latest|canary)-v[0-9]+$' | head -n 1)
+          fi
           
           if [ -z "$LAST_TAG" ]; then
             echo "No previous builders release found, will publish all packages"
@@ -168,16 +173,34 @@ jobs:
           else
             echo "Last builders release: $LAST_TAG"
             
-            # Get changed files since last tag
+            # Get changed files since last tag (excluding package.json version bumps)
             changed_files=$(git diff --name-only "$LAST_TAG" HEAD | grep '^builders/' || true)
             
-            # Filter packages that have changes
+            # Filter packages that have changes (excluding package.json if only version changed)
             > changed_packages.txt
             while IFS='|' read -r pkg_dir pkg_name pkg_version; do
-              # Check if package has file changes
-              if echo "$changed_files" | grep -q "^$pkg_dir/"; then
-                echo "$pkg_dir|$pkg_name|$pkg_version" >> changed_packages.txt
-                echo "  Changed: $pkg_name (file changes detected)"
+              # Get all changed files in this package directory
+              pkg_changed_files=$(echo "$changed_files" | grep "^$pkg_dir/" || true)
+              
+              if [ -n "$pkg_changed_files" ]; then
+                # Check if changes are only to package.json version field
+                non_version_changes=$(echo "$pkg_changed_files" | grep -v "^$pkg_dir/package.json$" || true)
+                
+                if [ -n "$non_version_changes" ]; then
+                  # Has real changes beyond version bump
+                  echo "$pkg_dir|$pkg_name|$pkg_version" >> changed_packages.txt
+                  echo "  Changed: $pkg_name (file changes detected)"
+                else
+                  # Only package.json changed, check if it's just version
+                  pkg_json_diff=$(git diff "$LAST_TAG" HEAD -- "$pkg_dir/package.json" || true)
+                  if echo "$pkg_json_diff" | grep -qE '^[+-]' | grep -vE '("version"|^\+\+\+|^---|^@@)'; then
+                    # Has changes beyond version field
+                    echo "$pkg_dir|$pkg_name|$pkg_version" >> changed_packages.txt
+                    echo "  Changed: $pkg_name (package.json has non-version changes)"
+                  else
+                    echo "  Skipped: $pkg_name (only version bump, no real changes)"
+                  fi
+                fi
               else
                 # Check if this is a new package (directory didn't exist at last tag)
                 if ! git ls-tree -r "$LAST_TAG" --name-only | grep -q "^$pkg_dir/"; then
@@ -324,11 +347,17 @@ jobs:
       - name: Create tags
         if: steps.select.outputs.HAS_PACKAGES == 'true' && github.event.inputs.dry_run != 'true'
         run: |
+          # Create individual package tags
           while IFS='|' read -r pkg_dir pkg_name old_version new_version; do
             tag="$pkg_name@$new_version"
-            echo "Creating tag: $tag"
+            echo "Creating package tag: $tag"
             git tag "$tag"
           done < /tmp/version_changes.txt
+          
+          # Create workflow-level tag for this latest release
+          WORKFLOW_TAG="builders-latest-v${{ github.run_number }}"
+          echo "Creating workflow-level tag: $WORKFLOW_TAG"
+          git tag "$WORKFLOW_TAG" -m "Latest release #${{ github.run_number }}"
           
           git push --tags
 
@@ -428,7 +457,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: "builders/v${{ github.run_number }}"
+          tag_name: "builders-latest-v${{ github.run_number }}"
           release_name: "Builders Release #${{ github.run_number }}"
           body_path: release_notes.md
           draft: false
