@@ -17,7 +17,17 @@
     "nextjs",
     "biome"
   ],
+  "author": "hexaaagon",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hexaaagon/loafy.git",
+    "directory": "builders/packages/nextjs/biome"
+  },
+  "bugs": {
+    "url": "https://github.com/hexaaagon/loafy/issues"
+  },
+  "homepage": "https://github.com/hexaaagon/loafy#readme",
   "dependencies": {},
   "devDependencies": {}
 }

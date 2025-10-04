@@ -10,7 +10,17 @@
     "loafy": "./dist/index.js"
   },
   "type": "module",
-  "author": "",
+  "author": "hexaaagon",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hexaaagon/loafy.git",
+    "directory": "packages/loafy"
+  },
+  "bugs": {
+    "url": "https://github.com/hexaaagon/loafy/issues"
+  },
+  "homepage": "https://github.com/hexaaagon/loafy",
   "dependencies": {
     "commander": "^14.0.0",
     "conf": "^14.0.0",
