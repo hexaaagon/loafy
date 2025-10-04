@@ -107,15 +107,6 @@ jobs:
               return 1
             fi
             
-            # Check if ready using Node.js with absolute path
-            local ready=$(node -e "const fs=require('fs'); const config=JSON.parse(fs.readFileSync('$config_file','utf8')); console.log(config.ready || false);" 2>&1)
-            echo "    Ready status: $ready"
-            
-            if [ "$ready" != "true" ]; then
-              echo "    Package not ready, skipping"
-              return 1
-            fi
-            
             # Get package name and version using Node.js with absolute path
             local name=$(node -e "const fs=require('fs'); const pkg=JSON.parse(fs.readFileSync('$package_file','utf8')); console.log(pkg.name);")
             local version=$(node -e "const fs=require('fs'); const pkg=JSON.parse(fs.readFileSync('$package_file','utf8')); console.log(pkg.version);")
@@ -178,13 +169,21 @@ jobs:
             echo "Last canary release: $LAST_TAG"
             
             # Get changed files since last tag
-            changed_files=$(git diff --name-only "$LAST_TAG" HEAD | grep '^builders/')
+            changed_files=$(git diff --name-only "$LAST_TAG" HEAD | grep '^builders/' || true)
             
             # Filter packages that have changes
             > changed_packages.txt
             while IFS='|' read -r pkg_dir pkg_name pkg_version; do
+              # Check if package has file changes
               if echo "$changed_files" | grep -q "^$pkg_dir/"; then
                 echo "$pkg_dir|$pkg_name|$pkg_version" >> changed_packages.txt
+                echo "  Changed: $pkg_name (file changes detected)"
+              else
+                # Check if this is a new package (directory didn't exist at last tag)
+                if ! git ls-tree -r "$LAST_TAG" --name-only | grep -q "^$pkg_dir/"; then
+                  echo "$pkg_dir|$pkg_name|$pkg_version" >> changed_packages.txt
+                  echo "  New package: $pkg_name (directory is new)"
+                fi
               fi
             done < all_packages.txt
           fi
@@ -224,7 +223,12 @@ jobs:
               IFS=',' read -ra DIRS <<< "${{ github.event.inputs.custom_packages }}"
               for dir in "${DIRS[@]}"; do
                 dir=$(echo "$dir" | xargs)  # trim whitespace
-                grep "^builders/$dir|" all_packages.txt >> selected_packages.txt || true
+                # Match with or without 'builders/' prefix
+                if [[ "$dir" == builders/* ]]; then
+                  grep "^$dir|" all_packages.txt >> selected_packages.txt || true
+                else
+                  grep "^builders/$dir|" all_packages.txt >> selected_packages.txt || true
+                fi
               done
               ;;
           esac
