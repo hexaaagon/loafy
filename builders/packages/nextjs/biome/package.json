@@ -1,6 +1,6 @@
 {
   "name": "@loafy/packages-nextjs-biome",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Biome package addon for Next.js projects in Loafy CLI",
   "main": "index.js",
   "files": [
