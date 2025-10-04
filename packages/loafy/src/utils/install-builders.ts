@@ -3,7 +3,7 @@ import { promisify } from "util";
 import { consola } from "consola";
 import semver from "semver";
 import type { PackageManager } from "../helpers/get-pkg-manager.js";
-import { existsSync, mkdirSync, readFileSync } from "fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import { homedir } from "os";
@@ -41,6 +41,18 @@ function getInstallDirectory(): string {
     mkdirSync(cacheDir, { recursive: true });
   }
 
+  // Ensure package.json exists for package managers
+  const packageJsonPath = join(cacheDir, "package.json");
+  if (!existsSync(packageJsonPath)) {
+    const packageJson = {
+      name: "loafy-builders-cache",
+      version: "1.0.0",
+      private: true,
+      description: "Cache directory for Loafy builder packages",
+    };
+    writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
+  }
+
   return cacheDir;
 }
 
@@ -55,6 +67,12 @@ function getInstalledVersion(packageName: string): string | null {
     ...packageName.split("/"),
     "package.json"
   );
+
+  if (process.env.VERBOSE || process.env.DEBUG) {
+    console.log(`Checking for package: ${packageName}`);
+    console.log(`  Path: ${packageJsonPath}`);
+    console.log(`  Exists: ${existsSync(packageJsonPath)}`);
+  }
 
   if (!existsSync(packageJsonPath)) {
     return null;
@@ -162,22 +180,35 @@ export async function installBuilders(
 
     switch (packageManager) {
       case "npm":
-        installCommand = `cd "${installDir}" && npm install ${packagesToInstall.join(" ")} --no-save`;
+        installCommand = `npm install ${packagesToInstall.join(" ")} --no-save`;
         break;
       case "yarn":
-        installCommand = `cd "${installDir}" && yarn add ${packagesToInstall.join(" ")} --ignore-workspace-root-check`;
+        installCommand = `yarn add ${packagesToInstall.join(" ")} --ignore-workspace-root-check`;
         break;
       case "pnpm":
-        installCommand = `cd "${installDir}" && pnpm add ${packagesToInstall.join(" ")} --no-save`;
+        // pnpm doesn't support --no-save, use --save-dev=false instead
+        installCommand = `pnpm add ${packagesToInstall.join(" ")} --save-dev=false --save-optional=false --save-peer=false`;
         break;
       case "bun":
-        installCommand = `cd "${installDir}" && bun add ${packagesToInstall.join(" ")} --no-save`;
+        installCommand = `bun add ${packagesToInstall.join(" ")} --no-save`;
         break;
       default:
         throw new Error(`Unsupported package manager: ${packageManager}`);
     }
 
-    const { stdout, stderr } = await execAsync(installCommand);
+    if (process.env.VERBOSE || process.env.DEBUG) {
+      console.log("Install command:", installCommand);
+      console.log("Working directory:", installDir);
+    }
+
+    const { stdout, stderr } = await execAsync(installCommand, {
+      cwd: installDir,
+    });
+
+    if (process.env.VERBOSE || process.env.DEBUG) {
+      if (stdout) console.log("stdout:", stdout);
+      if (stderr) console.log("stderr:", stderr);
+    }
 
     if (stderr && !stderr.includes("WARN")) {
       consola.warn("Installation warnings:", stderr);
@@ -201,8 +232,19 @@ export async function installBuilders(
         console.log(`  - ${pkgName}:`, isBuilderInstalled(pkgName));
       });
     }
-  } catch (error) {
-    consola.error("Failed to install builders:", error);
+  } catch (error: any) {
+    if (process.env.VERBOSE || process.env.DEBUG) {
+      console.error("Installation error details:");
+      console.error("  Error:", error.message);
+      if (error.stdout) console.error("  stdout:", error.stdout);
+      if (error.stderr) console.error("  stderr:", error.stderr);
+    }
+    
+    consola.error("Failed to install builders:", error.message);
+    if (error.stderr) {
+      consola.error("Error details:", error.stderr);
+    }
+    
     throw new Error(
       `Failed to install required builders. Please install them manually: ${packagesToInstall.join(", ")}`
     );

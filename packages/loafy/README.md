@@ -83,6 +83,26 @@ npx create-loafy@latest my-app
    bun dev
    ```
 
+## Development
+
+### Local Testing (No Publishing Required)
+
+For contributors and maintainers who want to test changes without publishing:
+
+```bash
+# Build the CLI
+pnpm build
+
+# Test locally with npm scripts
+pnpm test:init          # Test interactively
+pnpm test:init:verbose  # Test with debug output
+
+# Or use the PowerShell test script
+.\test-local.ps1 -Verbose
+```
+
+See [TESTING.md](./TESTING.md) for detailed development and testing workflows.
+
 ## Contributing
 
 Keen on enhancing Loafy? Contributions, bug reports, and feature requests are always welcome. Feel free to open an issue or submit a pull request.

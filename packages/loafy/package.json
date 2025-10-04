@@ -4,7 +4,9 @@
   "description": "Build your full-stack project easier and faster",
   "scripts": {
     "build": "tsc",
-    "dev": "tsc -w"
+    "dev": "tsc -w",
+    "test:init": "node dist/index.js init",
+    "test:init:verbose": "node dist/index.js init -v"
   },
   "bin": {
     "loafy": "./dist/index.js"

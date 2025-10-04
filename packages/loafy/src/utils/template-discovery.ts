@@ -390,11 +390,18 @@ export async function discoverTemplates(specifiedBuilders?: string[]): Promise<{
   // If no builders found, return empty arrays
   if (!loafyDir) {
     if (process.env.VERBOSE || process.env.DEBUG) {
+      const cacheDir = join(
+        process.env.LOAFY_CACHE_DIR || join(homedir(), ".loafy", "builders"),
+        "node_modules",
+        "@loafy"
+      );
+      
       console.warn(
         "Attempted to find @loafy builders in the following locations:"
       );
       console.warn("- " + join(process.cwd(), "builders"));
       console.warn("- " + join(__dirname, "..", "..", "..", "..", "builders"));
+      console.warn("- " + cacheDir + " (cache directory)");
       console.warn("- " + join(process.cwd(), "node_modules", "@loafy"));
       console.warn(
         "- " + join(__dirname, "..", "..", "..", "node_modules", "@loafy")
@@ -405,6 +412,7 @@ export async function discoverTemplates(specifiedBuilders?: string[]): Promise<{
       console.warn("- " + join(__dirname, "..", "node_modules", "@loafy"));
       console.warn("\nCurrent working directory:", process.cwd());
       console.warn("CLI __dirname:", __dirname);
+      console.warn("Home directory:", homedir());
     }
     console.warn(
       "No @loafy builders found. They will be installed when you select a template."
