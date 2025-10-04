@@ -1,6 +1,6 @@
 {
   "name": "@loafy/categories-web",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "Web development categories for Loafy CLI",
   "main": "index.js",
   "files": [

@@ -1,6 +1,6 @@
 {
   "name": "@loafy/categories-mobile",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Category definitions for Loafy CLI",
   "main": "index.js",
   "files": [
