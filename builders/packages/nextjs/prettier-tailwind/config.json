@@ -8,6 +8,6 @@
   "baseTemplateUuid": "a7f2b5c8-3d1e-4c6f-9a2b-8e5f7d9c1a3b",
   "category": "extras",
   "categoryUuid": "f7b2c1d5-3e6a-7b4c-2f8d-9a5e1c3b7d4f",
-  "conflict": [],
+  "conflict": ["1ab4c662-6152-4168-a661-ad48b6c1137e"],
   "needed": []
 }
