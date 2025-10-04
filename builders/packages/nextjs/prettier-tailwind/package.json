@@ -1,6 +1,6 @@
 {
   "name": "@loafy/packages-nextjs-prettier-tailwind",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Prettier Tailwind package addon for Next.js projects in Loafy CLI",
   "main": "index.js",
   "files": [
