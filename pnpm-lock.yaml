@@ -157,6 +157,8 @@ importers:
 
   builders/packages/nextjs/eslint: {}
 
+  builders/packages/nextjs/prettier-tailwind: {}
+
   builders/template/_template-base-framework: {}
 
   builders/template/expo:
@@ -171,11 +173,21 @@ importers:
 
   builders/template/nextjs: {}
 
+  builders/template/turborepo:
+    dependencies:
+      uuid:
+        specifier: ^9.0.0
+        version: 9.0.1
+    devDependencies:
+      typescript:
+        specifier: ^5.0.0
+        version: 5.9.2
+
   packages/create-loafy:
     dependencies:
       loafy:
-        specifier: 1.1.3-canary.4
-        version: 1.1.3-canary.4
+        specifier: 1.1.3-canary.11
+        version: 1.1.3-canary.11
 
   packages/loafy:
     dependencies:
@@ -194,6 +206,9 @@ importers:
       prompts:
         specifier: ^2.4.2
         version: 2.4.2
+      semver:
+        specifier: ^7.6.3
+        version: 7.7.2
       update-check:
         specifier: ^1.5.4
         version: 1.5.4
@@ -210,6 +225,9 @@ importers:
       '@types/prompts':
         specifier: ^2.4.9
         version: 2.4.9
+      '@types/semver':
+        specifier: ^7.5.8
+        version: 7.7.1
       typescript:
         specifier: ^5.9.2
         version: 5.9.2
@@ -1002,6 +1020,9 @@ packages:
 
   '@types/react@19.1.13':
     resolution: {integrity: sha512-hHkbU/eoO3EG5/MZkuFSKmYqPbSVk5byPFa3e7y/8TybHiLMACgI8seVYlicwk7H5K/rI2px9xrQp/C+AUDTiQ==}
+
+  '@types/semver@7.7.1':
+    resolution: {integrity: sha512-FmgJfu+MOcQ370SD0ev7EI8TlCAfKYU+B4m5T3yXc1CiRN94g/SZPtsCkk506aUDtlMnFZvasDwHHUcZUEaYuA==}
 
   '@typescript-eslint/eslint-plugin@8.39.0':
     resolution: {integrity: sha512-bhEz6OZeUR+O/6yx9Jk6ohX6H9JSFTaiY0v9/PuKT3oGK0rn0jNplLmyFUGV+a9gfYnVNwGDwS/UkLIuXNb2Rw==}
@@ -2026,8 +2047,8 @@ packages:
     resolution: {integrity: sha512-xi6IyHML+c9+Q3W0S4fCQJOym42pyurFiJUHEcEyHS0CeKzia4yZDEsLlqOFykxOdHpNy0NmvVO31vcSqAxJCg==}
     engines: {node: '>= 12.0.0'}
 
-  loafy@1.1.3-canary.4:
-    resolution: {integrity: sha512-mbrfW7HV0WMmrpLVzn6jk8zpXWnPFuwO8N/sjt9Hmi0AjPHQKNn118A597Z8vONEtnvFJ5Pa0WdZswRhpIPa1Q==}
+  loafy@1.1.3-canary.11:
+    resolution: {integrity: sha512-wfFsbadBD1sGa6hLguLquF5W8PAqyOMHh24x8aCW6WVTRjwvEQcjF3rZKWg2/Kfk8FqYcQ7IHbrFZARztVSuww==}
     hasBin: true
 
   locate-path@6.0.0:
@@ -3258,6 +3279,8 @@ snapshots:
     dependencies:
       csstype: 3.1.3
 
+  '@types/semver@7.7.1': {}
+
   '@typescript-eslint/eslint-plugin@8.39.0(@typescript-eslint/parser@8.39.0(eslint@9.33.0(jiti@2.5.1))(typescript@5.9.2))(eslint@9.33.0(jiti@2.5.1))(typescript@5.9.2)':
     dependencies:
       '@eslint-community/regexpp': 4.12.1
@@ -4485,7 +4508,7 @@ snapshots:
       lightningcss-win32-arm64-msvc: 1.30.1
       lightningcss-win32-x64-msvc: 1.30.1
 
-  loafy@1.1.3-canary.4:
+  loafy@1.1.3-canary.11:
     dependencies:
       commander: 14.0.0
       conf: 14.0.0

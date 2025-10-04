@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, readdirSync, type Dirent } from "fs";
 import { join, dirname, basename } from "path";
 import { fileURLToPath } from "url";
+import { homedir } from "os";
 import { glob } from "glob";
 import type {
   BaseTemplate,
@@ -23,6 +24,15 @@ function getLoafyPackagesDir(): {
     {
       path: join(__dirname, "..", "..", "..", "..", "builders"),
       mode: "development" as const,
+    },
+    // Production: Global cache directory (primary location for installed builders)
+    {
+      path: join(
+        process.env.LOAFY_CACHE_DIR || join(homedir(), ".loafy", "builders"),
+        "node_modules",
+        "@loafy"
+      ),
+      mode: "production" as const,
     },
     // Production: installed packages in current working directory node_modules
     {
