@@ -66,12 +66,12 @@ export function getBuilderPackages(templateName: string): {
         "@loafy/packages-nextjs-prettier-tailwind",
       ],
       versions: {
-        template: "^0.2.5", // AUTO-UPDATED by workflow
-        categories: "^0.2.5", // AUTO-UPDATED by workflow
+        template: "^0.2.7", // AUTO-UPDATED by workflow
+        categories: "^0.2.7", // AUTO-UPDATED by workflow
         packageAddons: {
-          "@loafy/packages-nextjs-biome": "^0.2.5", // AUTO-UPDATED by workflow
-          "@loafy/packages-nextjs-eslint": "^0.2.5", // AUTO-UPDATED by workflow
-          "@loafy/packages-nextjs-prettier-tailwind": "^0.1.5", // AUTO-UPDATED by workflow
+          "@loafy/packages-nextjs-biome": "^0.2.7", // AUTO-UPDATED by workflow
+          "@loafy/packages-nextjs-eslint": "^0.2.7", // AUTO-UPDATED by workflow
+          "@loafy/packages-nextjs-prettier-tailwind": "^0.1.7", // AUTO-UPDATED by workflow
         },
       },
     },
@@ -80,8 +80,8 @@ export function getBuilderPackages(templateName: string): {
       categories: "@loafy/categories-mobile",
       packageAddons: [],
       versions: {
-        template: "^0.1.5", // AUTO-UPDATED by workflow
-        categories: "^0.1.2", // AUTO-UPDATED by workflow
+        template: "^0.1.7", // AUTO-UPDATED by workflow
+        categories: "^0.1.4", // AUTO-UPDATED by workflow
         packageAddons: {},
       },
     },
@@ -90,7 +90,7 @@ export function getBuilderPackages(templateName: string): {
       categories: "@loafy/categories-monorepo",
       packageAddons: [],
       versions: {
-        template: "^0.1.5", // AUTO-UPDATED by workflow
+        template: "^0.1.7", // AUTO-UPDATED by workflow
         categories: "^0.1.2", // AUTO-UPDATED by workflow
         packageAddons: {},
       },
