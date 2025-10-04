@@ -19,6 +19,13 @@ export const AVAILABLE_TEMPLATES: Omit<BaseTemplate, "path">[] = [
     description: "React Native framework for mobile applications",
     ready: false,
   },
+  {
+    id: "a674a07f-c6f4-4c72-a848-c9c690b1154c",
+    name: "turborepo",
+    title: "Turborepo Monorepo",
+    description: "Monorepo setup using Turborepo",
+    ready: false,
+  },
 ];
 
 /**
