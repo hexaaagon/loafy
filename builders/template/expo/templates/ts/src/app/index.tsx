@@ -22,7 +22,7 @@ export default function App() {
 							</Text>
 						</View>
 						<Text className="text-white font-dm-mono text-base">
-							expo template - v0.1.0
+							expo template - v{{config.version}}
 						</Text>
 					</View>
 

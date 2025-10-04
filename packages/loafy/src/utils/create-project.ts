@@ -7,8 +7,8 @@ import {
   readdirSync,
   statSync,
   renameSync,
-} from "fs";
-import { join, dirname, basename } from "path";
+} from "node:fs";
+import { join, dirname, basename } from "node:path";
 import { consola } from "consola";
 import type {
   BaseTemplate,
@@ -26,6 +26,24 @@ interface CreateProjectOptions {
 }
 
 /**
+ * Read version from builder's package.json
+ * @param builderPath - Path to the builder directory
+ * @returns Version string or "1.0.0" as fallback
+ */
+function getBuilderVersion(builderPath: string): string {
+  try {
+    const packageJsonPath = join(builderPath, "package.json");
+    if (existsSync(packageJsonPath)) {
+      const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf-8"));
+      return packageJson.version || "1.0.0";
+    }
+  } catch (error) {
+    consola.debug(`Failed to read builder version: ${error}`);
+  }
+  return "1.0.0";
+}
+
+/**
  * Replace template placeholders in file content
  * @param content - File content with placeholders
  * @param config - Project configuration
@@ -37,7 +55,9 @@ function replaceTemplatePlaceholders(
 ): string {
   return content
     .replace(/\{\{config\.projectName\}\}/g, config.name)
-    .replace(/\{\{config\.name\}\}/g, config.name);
+    .replace(/\{\{config\.name\}\}/g, config.name)
+    .replace(/\{\{config\.version\}\}/g, config.version || "1.0.0")
+    .replace(/\{\{config\.owner\}\}/g, config.owner || "username");
 }
 
 /**
@@ -68,7 +88,11 @@ function processTemplateFiles(dirPath: string, config: ProjectConfig): void {
         filename.endsWith(".txt") ||
         filename.endsWith(".yml") ||
         filename.endsWith(".yaml") ||
-        filename.endsWith(".toml")
+        filename.endsWith(".toml") ||
+        filename.endsWith(".ts") ||
+        filename.endsWith(".tsx") ||
+        filename.endsWith(".js") ||
+        filename.endsWith(".jsx")
       ) {
         try {
           const content = readFileSync(itemPath, "utf-8");
@@ -95,6 +119,11 @@ export async function createProject(
   const { baseTemplate, packageAddons, skipInstall } = options;
 
   consola.start("Creating project...");
+
+  // Read version from builder's package.json
+  if (!config.version) {
+    config.version = getBuilderVersion(baseTemplate.path);
+  }
 
   // Create project directory
   mkdirSync(appPath, { recursive: true });
@@ -239,7 +268,7 @@ async function setupPackageJson(
       content = replaceTemplatePlaceholders(content, config);
 
       packageJson = JSON.parse(content);
-    } catch (error) {
+    } catch (_error) {
       consola.warn("Could not parse existing package.json, creating new one");
     }
   }
@@ -469,7 +498,7 @@ async function installDependencies(
   const command = commands[packageManager];
 
   try {
-    const { spawn } = await import("child_process");
+    const { spawn } = await import("node:child_process");
 
     await new Promise<void>((resolve, reject) => {
       const process = spawn(

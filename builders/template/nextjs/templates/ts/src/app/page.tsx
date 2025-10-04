@@ -22,7 +22,7 @@ export default function Home() {
             </h1>
           </div>
           <p className="text-white font-mono text-base">
-            next.js template - v0.1.0
+            next.js template - v{{config.version}}
           </p>
         </div>
 

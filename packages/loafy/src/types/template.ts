@@ -51,4 +51,6 @@ export interface ProjectConfig {
   language: Language;
   packages: string[];
   packageManager: string;
+  version?: string;
+  owner?: string;
 }
