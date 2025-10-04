@@ -1,0 +1,39 @@
+{
+  "name": "@loafy/builders-turborepo",
+  "version": "0.1.0",
+  "description": "Monorepo setup using Turborepo",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*",
+    "templates/**/*"
+  ],
+  "scripts": {
+    "build": "node -e \"console.log('No build needed for template package')\"",
+    "dev": "tsc --watch"
+  },
+  "keywords": [
+    "loafy",
+    "turborepo",
+    "monorepo",
+    "template",
+    "builder"
+  ],
+  "author": "hexaaagon",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hexaaagon/loafy.git",
+    "directory": "builders/template/expo"
+  },
+  "bugs": {
+    "url": "https://github.com/hexaaagon/loafy/issues"
+  },
+  "homepage": "https://github.com/hexaaagon/loafy#readme",
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "uuid": "^9.0.0"
+  }
+}

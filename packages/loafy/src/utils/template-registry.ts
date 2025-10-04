@@ -58,6 +58,12 @@ export function getBuilderPackages(templateName: string): {
       packageAddons: [],
       templateVersion: "^0.1.0", // AUTO-UPDATED by workflow
     },
+    turborepo: {
+      template: "@loafy/builders-turborepo",
+      categories: "@loafy/categories-monorepo",
+      packageAddons: [],
+      templateVersion: "^0.1.0", // AUTO-UPDATED by workflow
+    },
   };
 
   return (

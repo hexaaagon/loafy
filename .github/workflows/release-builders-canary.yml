@@ -376,8 +376,8 @@ jobs:
               echo "  Updating $template_name version to $version_range"
               
               # Update the version in template-registry.ts using sed
-              # Match the template block and update its version line
-              sed -i "/$template_name: {/,/},/ s/version: \"[^\"]*\",/version: \"$version_range\", \/\/ AUTO-UPDATED by workflow/" "$REGISTRY_FILE"
+              # Match the template block and update its templateVersion line
+              sed -i "/$template_name: {/,/},/ s/templateVersion: \"[^\"]*\",/templateVersion: \"$version_range\", \/\/ AUTO-UPDATED by workflow/" "$REGISTRY_FILE"
             fi
           done < /tmp/version_changes.txt
           
