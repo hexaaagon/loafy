@@ -57,19 +57,19 @@ export function getBuilderPackages(templateName: string): {
         "@loafy/packages-nextjs-eslint",
         "@loafy/packages-nextjs-prettier-tailwind",
       ],
-      templateVersion: "^0.2.0", // AUTO-UPDATED by workflow
+      templateVersion: "^0.2.1", // AUTO-UPDATED by workflow // AUTO-UPDATED by workflow
     },
     expo: {
       template: "@loafy/builders-expo",
       categories: "@loafy/categories-mobile",
       packageAddons: [],
-      templateVersion: "^0.1.0", // AUTO-UPDATED by workflow
+      templateVersion: "^0.1.1", // AUTO-UPDATED by workflow // AUTO-UPDATED by workflow
     },
     turborepo: {
       template: "@loafy/builders-turborepo",
       categories: "@loafy/categories-monorepo",
       packageAddons: [],
-      templateVersion: "^0.1.0", // AUTO-UPDATED by workflow
+      templateVersion: "^0.1.1", // AUTO-UPDATED by workflow // AUTO-UPDATED by workflow
     },
   };
 
