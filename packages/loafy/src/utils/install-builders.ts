@@ -1,12 +1,12 @@
-import { exec } from "child_process";
-import { promisify } from "util";
+import { exec } from "node:child_process";
+import { promisify } from "node:util";
 import { consola } from "consola";
 import semver from "semver";
 import type { PackageManager } from "../helpers/get-pkg-manager.js";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
-import { join, dirname } from "path";
-import { fileURLToPath } from "url";
-import { homedir } from "os";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+import { homedir } from "node:os";
 import { getBuilderPackages } from "./template-registry.js";
 
 const execAsync = promisify(exec);
@@ -20,7 +20,7 @@ async function getLatestPackageVersion(packageName: string): Promise<string> {
     const { stdout } = await execAsync(`npm view ${packageName} version`);
     const version = stdout.trim();
     return `^${version}`;
-  } catch (error) {
+  } catch (_error) {
     // If package not found or error, use latest
     console.warn(`Could not fetch version for ${packageName}, using latest`);
     return "latest";
@@ -139,7 +139,7 @@ export async function installBuilders(
   // Extract package names without version specifiers for checking
   const packageNames = packages.map((pkg) =>
     pkg.split("@")[0] === ""
-      ? "@" + pkg.split("@")[1] // Scoped package like @loafy/...
+      ? `@${pkg.split("@")[1]}` // Scoped package like @loafy/...
       : pkg.split("@")[0]
   );
 
@@ -239,12 +239,12 @@ export async function installBuilders(
       if (error.stdout) console.error("  stdout:", error.stdout);
       if (error.stderr) console.error("  stderr:", error.stderr);
     }
-    
+
     consola.error("Failed to install builders:", error.message);
     if (error.stderr) {
       consola.error("Error details:", error.stderr);
     }
-    
+
     throw new Error(
       `Failed to install required builders. Please install them manually: ${packagesToInstall.join(", ")}`
     );
@@ -305,8 +305,7 @@ export async function ensureBuildersInstalled(
         packagesToInstall.push(categoriesPkg);
       } else {
         // Package addon - use its specific version
-        const addonPkg =
-          pkgVersion !== "latest" ? `${pkg}@${pkgVersion}` : pkg;
+        const addonPkg = pkgVersion !== "latest" ? `${pkg}@${pkgVersion}` : pkg;
         packagesToInstall.push(addonPkg);
       }
     }

@@ -4,6 +4,7 @@
   "description": "Category definitions for Loafy CLI",
   "main": "index.js",
   "files": [
+    "config.json",
     "categories/"
   ],
   "keywords": [

@@ -67,11 +67,11 @@ export function getBuilderPackages(templateName: string): {
       ],
       versions: {
         template: "^0.2.5", // AUTO-UPDATED by workflow
-        categories: "^0.1.2", // AUTO-UPDATED by workflow
+        categories: "^0.2.5", // AUTO-UPDATED by workflow
         packageAddons: {
-          "@loafy/packages-nextjs-biome": "^0.1.2", // AUTO-UPDATED by workflow
-          "@loafy/packages-nextjs-eslint": "^0.1.2", // AUTO-UPDATED by workflow
-          "@loafy/packages-nextjs-prettier-tailwind": "^0.1.2", // AUTO-UPDATED by workflow
+          "@loafy/packages-nextjs-biome": "^0.2.5", // AUTO-UPDATED by workflow
+          "@loafy/packages-nextjs-eslint": "^0.2.5", // AUTO-UPDATED by workflow
+          "@loafy/packages-nextjs-prettier-tailwind": "^0.1.5", // AUTO-UPDATED by workflow
         },
       },
     },
