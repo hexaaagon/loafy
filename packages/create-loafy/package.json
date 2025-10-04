@@ -1,6 +1,6 @@
 {
   "name": "create-loafy",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "description": "Create Loafy apps with one command",
   "main": "index.js",
   "bin": {
@@ -29,7 +29,7 @@
     "README.md"
   ],
   "dependencies": {
-    "loafy": "1.2.4"
+    "loafy": "1.2.5"
   },
   "homepage": "https://github.com/hexaaagon/loafy",
   "repository": {
