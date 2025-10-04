@@ -119,11 +119,12 @@ export async function installBuilders(
   packageManager: PackageManager
 ): Promise<void> {
   // Extract package names without version specifiers for checking
-  const packageNames = packages.map((pkg) => pkg.split("@")[0] === "" 
-    ? "@" + pkg.split("@")[1] // Scoped package like @loafy/...
-    : pkg.split("@")[0]
+  const packageNames = packages.map((pkg) =>
+    pkg.split("@")[0] === ""
+      ? "@" + pkg.split("@")[1] // Scoped package like @loafy/...
+      : pkg.split("@")[0]
   );
-  
+
   const packagesToInstall = packages.filter((pkg, index) => {
     const pkgName = packageNames[index];
     // Extract version from package string (e.g., "@loafy/builders-nextjs@^0.2.0")
@@ -134,7 +135,9 @@ export async function installBuilders(
 
   if (packagesToInstall.length === 0) {
     if (process.env.VERBOSE || process.env.DEBUG) {
-      consola.info("All required builders are already installed with compatible versions");
+      consola.info(
+        "All required builders are already installed with compatible versions"
+      );
     }
     return;
   }
@@ -230,7 +233,7 @@ export async function ensureBuildersInstalled(
   for (let i = 0; i < packagesToCheck.length; i++) {
     const pkg = packagesToCheck[i];
     let needsInstall = false;
-    
+
     if (pkg === template || pkg === categories) {
       // Check version compatibility for template and categories
       needsInstall = !isBuilderInstalled(pkg, templateVersion);
@@ -239,7 +242,7 @@ export async function ensureBuildersInstalled(
       const addonVersion = await getLatestPackageVersion(pkg);
       needsInstall = !isBuilderInstalled(pkg, addonVersion);
     }
-    
+
     if (needsInstall) {
       if (pkg === template) {
         packagesToInstall.push(templatePkg);
