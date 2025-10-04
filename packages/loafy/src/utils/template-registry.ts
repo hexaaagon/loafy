@@ -48,6 +48,7 @@ export function getBuilderPackages(templateName: string): {
       packageAddons: [
         "@loafy/packages-nextjs-biome",
         "@loafy/packages-nextjs-eslint",
+        "@loafy/packages-nextjs-prettier-tailwind",
       ],
       templateVersion: "^0.2.0", // AUTO-UPDATED by workflow
     },
