@@ -298,8 +298,8 @@ jobs:
               pkg_name=$(jq -r '.name' "$dir/package.json" 2>/dev/null)
               dir_name=$(basename "$dir")
               
-              # Template packages should be @loafy/{dir_name}
-              expected="@loafy/$dir_name"
+              # Template packages should be @loafy/builders-{dir_name}
+              expected="@loafy/builders-$dir_name"
               
               if [ "$pkg_name" != "$expected" ]; then
                 echo "  ⚠️  Template $dir_name has package name $pkg_name (expected: $expected)"
@@ -315,12 +315,11 @@ jobs:
               framework=$(basename "$(dirname "$dir")")
               addon=$(basename "$dir")
               
-              # Package addons should be @loafy/{framework}-{addon} or @loafy/packages-{framework}-{addon}
-              expected1="@loafy/$framework-$addon"
-              expected2="@loafy/packages-$framework-$addon"
+              # Package addons should be @loafy/packages-{framework}-{addon}
+              expected="@loafy/packages-$framework-$addon"
               
-              if [ "$pkg_name" != "$expected1" ] && [ "$pkg_name" != "$expected2" ]; then
-                echo "  ⚠️  Package $framework/$addon has package name $pkg_name (expected: $expected1 or $expected2)"
+              if [ "$pkg_name" != "$expected" ]; then
+                echo "  ⚠️  Package $framework/$addon has package name $pkg_name (expected: $expected)"
                 ((errors++))
               fi
             fi
