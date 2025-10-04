@@ -12,6 +12,10 @@
     "loafy": "./dist/index.js"
   },
   "type": "module",
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "author": "hexaaagon",
   "license": "Apache-2.0",
   "repository": {
