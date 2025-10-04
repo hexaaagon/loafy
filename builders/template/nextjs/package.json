@@ -1,6 +1,6 @@
 {
   "name": "@loafy/builders-nextjs",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Next.js application templates for Loafy CLI",
   "main": "index.js",
   "files": [
