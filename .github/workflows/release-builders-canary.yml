@@ -188,7 +188,7 @@ jobs:
                 else
                   # Only package.json changed, check if it's just version
                   pkg_json_diff=$(git diff "$LAST_TAG" HEAD -- "$pkg_dir/package.json" || true)
-                  if echo "$pkg_json_diff" | grep -qE '^[+-]' | grep -vE '("version"|^\+\+\+|^---|^@@)'; then
+                  if echo "$pkg_json_diff" | grep -E '^[+-]' | grep -vE '("version"|^\+\+\+|^---|^@@)' | grep -q '^'; then
                     # Has changes beyond version field
                     echo "$pkg_dir|$pkg_name|$pkg_version" >> changed_packages.txt
                     echo "  Changed: $pkg_name (package.json has non-version changes)"
@@ -430,9 +430,8 @@ jobs:
               echo "  Updating package addon version for $pkg_name to $version_range"
               
               # Update in packageAddons record
-              # Escape special characters for sed
-              escaped_pkg_name=$(echo "$pkg_name" | sed 's/\//\\\//g')
-              sed -i "s/\"$escaped_pkg_name\": \"[^\"]*\", \/\/ AUTO-UPDATED by workflow/\"$pkg_name\": \"$version_range\", \/\/ AUTO-UPDATED by workflow/" "$REGISTRY_FILE"
+              # Use | as delimiter to avoid conflicts with / in package names
+              sed -i "s|\"$pkg_name\": \"[^\"]*\", // AUTO-UPDATED by workflow|\"$pkg_name\": \"$version_range\", // AUTO-UPDATED by workflow|" "$REGISTRY_FILE"
             fi
           done < /tmp/version_changes.txt
           
