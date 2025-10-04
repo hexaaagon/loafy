@@ -2,6 +2,7 @@
 
 # Loafy Local Project
 apps/template-*/
+development-packages/
 
 # Dependencies
 node_modules
