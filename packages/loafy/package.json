@@ -1,6 +1,6 @@
 {
   "name": "loafy",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "Build your full-stack project easier and faster",
   "scripts": {
     "build": "tsc",
