@@ -17,7 +17,7 @@ export const AVAILABLE_TEMPLATES: Omit<BaseTemplate, "path">[] = [
     name: "expo",
     title: "Expo",
     description: "React Native framework for mobile applications",
-    ready: false,
+    ready: true,
   },
   {
     id: "a674a07f-c6f4-4c72-a848-c9c690b1154c",

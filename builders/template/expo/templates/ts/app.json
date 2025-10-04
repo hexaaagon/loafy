@@ -1,0 +1,48 @@
+{
+  "expo": {
+    "name": "Loafy Template",
+    "slug": "loafy-template",
+    "description": "A mobile application template built with Expo, React Native, and Tailwind CSS.",
+    "owner": "username",
+    "version": "1.0.0",
+    "platforms": ["android", "ios", "web"],
+    "orientation": "portrait",
+    "icon": "./src/assets/images/icon.png",
+    "scheme": "tugascollecter",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./src/assets/images/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./src/assets/images/icon_foreground.png",
+        "backgroundColor": "#3b82f6"
+      },
+      "package": "com.loafy.expo",
+      "permissions": [
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.VIBRATE"
+      ],
+      "notification": {
+        "icon": "./src/assets/images/icon_foreground.png",
+        "color": "#3b82f6"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./src/assets/images/icon.png"
+    },
+    "plugins": ["expo-router", "expo-font"],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

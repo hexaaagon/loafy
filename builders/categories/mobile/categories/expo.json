@@ -1,0 +1,14 @@
+[
+  {
+    "id": "linting-formatting",
+    "title": "Linting & Formatting",
+    "description": "Code quality and style enforcement tools",
+    "order": 1
+  },
+  {
+    "id": "extras",
+    "title": "Extras",
+    "description": "Additional utilities and integrations",
+    "order": 999
+  }
+]
