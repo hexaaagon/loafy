@@ -1,6 +1,6 @@
 {
   "name": "@loafy/packages-nextjs-eslint",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "ESLint package addon for Next.js projects in Loafy CLI",
   "main": "index.js",
   "files": [

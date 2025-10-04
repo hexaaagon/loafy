@@ -1,6 +1,6 @@
 {
   "name": "@loafy/builders-turborepo",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Monorepo setup using Turborepo",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
