@@ -24,26 +24,38 @@ export const AVAILABLE_TEMPLATES: Omit<BaseTemplate, "path">[] = [
 /**
  * Get builder package names for a template
  *
- * NOTE: Versions are automatically updated by CI/CD workflows when builders are published
+ * NOTE: Template and categories versions are automatically updated by CI/CD workflows when builders are published.
+ * Package addon versions are fetched dynamically from npm registry.
  */
 export function getBuilderPackages(templateName: string): {
   template: string;
   categories: string;
-  version: string;
+  packageAddons: string[];
+  templateVersion: string;
 } {
   const builderMap: Record<
     string,
-    { template: string; categories: string; version: string }
+    {
+      template: string;
+      categories: string;
+      packageAddons: string[];
+      templateVersion: string;
+    }
   > = {
     nextjs: {
       template: "@loafy/builders-nextjs",
       categories: "@loafy/categories-web",
-      version: "^0.2.0", // AUTO-UPDATED by workflow
+      packageAddons: [
+        "@loafy/packages-nextjs-biome",
+        "@loafy/packages-nextjs-eslint",
+      ],
+      templateVersion: "^0.2.0", // AUTO-UPDATED by workflow
     },
     expo: {
       template: "@loafy/builders-expo",
       categories: "@loafy/categories-mobile",
-      version: "^0.1.0", // AUTO-UPDATED by workflow
+      packageAddons: [],
+      templateVersion: "^0.1.0", // AUTO-UPDATED by workflow
     },
   };
 
@@ -51,7 +63,8 @@ export function getBuilderPackages(templateName: string): {
     builderMap[templateName] || {
       template: `@loafy/builders-${templateName}`,
       categories: "@loafy/categories-web",
-      version: "latest",
+      packageAddons: [],
+      templateVersion: "latest",
     }
   );
 }

@@ -11,6 +11,21 @@ const execAsync = promisify(exec);
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 /**
+ * Fetch the latest version of a package from npm registry
+ */
+async function getLatestPackageVersion(packageName: string): Promise<string> {
+  try {
+    const { stdout } = await execAsync(`npm view ${packageName} version`);
+    const version = stdout.trim();
+    return `^${version}`;
+  } catch (error) {
+    // If package not found or error, use latest
+    console.warn(`Could not fetch version for ${packageName}, using latest`);
+    return "latest";
+  }
+}
+
+/**
  * Get the directory where builders should be installed
  * This should be relative to the CLI's installation location
  */
@@ -135,21 +150,40 @@ export async function ensureBuildersInstalled(
   templateName: string,
   packageManager: PackageManager
 ): Promise<void> {
-  const { template, categories, version } = getBuilderPackages(templateName);
+  const { template, categories, packageAddons, templateVersion } =
+    getBuilderPackages(templateName);
 
   // For version-specific packages, append the version
   const templatePkg =
-    version && version !== "latest" ? `${template}@${version}` : template;
+    templateVersion && templateVersion !== "latest"
+      ? `${template}@${templateVersion}`
+      : template;
   const categoriesPkg =
-    version && version !== "latest" ? `${categories}@${version}` : categories;
+    templateVersion && templateVersion !== "latest"
+      ? `${categories}@${templateVersion}`
+      : categories;
 
-  const packagesToCheck = [template, categories];
+  const packagesToCheck = [template, categories, ...packageAddons];
   const packagesToInstall: string[] = [];
 
   // Check which packages are missing
-  for (const pkg of packagesToCheck) {
+  for (let i = 0; i < packagesToCheck.length; i++) {
+    const pkg = packagesToCheck[i];
     if (!isBuilderInstalled(pkg)) {
-      packagesToInstall.push(pkg === template ? templatePkg : categoriesPkg);
+      if (pkg === template) {
+        packagesToInstall.push(templatePkg);
+      } else if (pkg === categories) {
+        packagesToInstall.push(categoriesPkg);
+      } else {
+        // Package addon - fetch its own version from npm
+        const addonIndex = packageAddons.indexOf(pkg);
+        if (addonIndex !== -1) {
+          const addonVersion = await getLatestPackageVersion(pkg);
+          const addonPkg =
+            addonVersion !== "latest" ? `${pkg}@${addonVersion}` : pkg;
+          packagesToInstall.push(addonPkg);
+        }
+      }
     }
   }
 
