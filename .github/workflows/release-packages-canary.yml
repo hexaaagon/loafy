@@ -8,6 +8,7 @@ on:
 permissions:
   contents: write
   pull-requests: read
+  id-token: write  # Required for npm provenance
 
 jobs:
   release-canary:
@@ -199,8 +200,8 @@ jobs:
         if: github.event_name == 'workflow_dispatch' || github.event_name == 'release'
         run: |
           cd packages/loafy
-          npm publish --access public --tag canary
+          npm publish --access public --tag canary --provenance
           cd ../create-loafy
-          npm publish --access public --tag canary
+          npm publish --access public --tag canary --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

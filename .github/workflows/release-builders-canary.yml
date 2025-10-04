@@ -40,6 +40,7 @@ on:
 permissions:
   contents: write
   pull-requests: read
+  id-token: write  # Required for npm provenance
 
 jobs:
   detect-and-publish:
@@ -348,7 +349,7 @@ jobs:
             cd "$WORKSPACE_ROOT/$pkg_dir"
             
             # Publish to npm with 'canary' dist-tag
-            npm publish --access public --tag canary
+            npm publish --access public --tag canary --provenance
             
             cd "$WORKSPACE_ROOT"
           done < /tmp/version_changes.txt

@@ -40,6 +40,7 @@ on:
 permissions:
   contents: write
   pull-requests: read
+  id-token: write  # Required for npm provenance
 
 jobs:
   detect-and-publish:
@@ -337,7 +338,7 @@ jobs:
             cd "$WORKSPACE_ROOT/$pkg_dir"
             
             # Publish to npm
-            npm publish --access public
+            npm publish --access public --provenance
             
             cd "$WORKSPACE_ROOT"
           done < /tmp/version_changes.txt
