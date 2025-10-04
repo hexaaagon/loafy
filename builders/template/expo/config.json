@@ -2,9 +2,7 @@
   "id": "expo-app",
   "uuid": "b9e4c7d2-5f8a-4b6e-9c3d-7a1f5e8b2c9a",
   "title": "Expo App",
-  "description": "Cross-platform React Native application with Expo SDK",
   "ready": false,
   "conflict": [],
-  "version": "0.1.0",
   "languages": ["javascript", "typescript"]
 }

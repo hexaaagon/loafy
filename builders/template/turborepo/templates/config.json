@@ -1,9 +1,7 @@
 {
   "id": "turborepo-monorepo",
   "title": "Turborepo Monorepo",
-  "description": "Monorepo setup using Turborepo",
   "ready": false,
   "conflict": [],
-  "version": "0.1.0",
   "languages": ["javascript", "typescript"]
 }

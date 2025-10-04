@@ -2,9 +2,7 @@
   "id": "nextjs-app",
   "uuid": "a7f2b5c8-3d1e-4c6f-9a2b-8e5f7d9c1a3b",
   "title": "Next.js App",
-  "description": "A modern React framework with server-side rendering and full-stack capabilities",
   "ready": true,
   "conflict": [],
-  "version": "0.1.0",
   "languages": ["javascript", "typescript"]
 }

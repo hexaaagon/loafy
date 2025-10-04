@@ -2,7 +2,5 @@
   "id": "web-categories",
   "uuid": "e4f8a9b2-7c3d-4e1f-a5b6-9d8c7e6f5a4b",
   "title": "Web Development Categories",
-  "description": "Categories for web development packages",
-  "ready": true,
-  "version": "0.1.0"
+  "ready": true
 }

@@ -2,7 +2,6 @@
   "id": "framework-package-name",
   "appUuid": "00000000-0000-0000-0000-000000000000",
   "title": "Package Display Name",
-  "description": "Description of what this package adds to the project",
   "ready": false,
   "languages": ["javascript", "typescript"],
   "baseTemplate": "framework-name",

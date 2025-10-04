@@ -2,7 +2,6 @@
   "id": "nextjs-biome",
   "appUuid": "1ab4c662-6152-4168-a661-ad48b6c1137e",
   "title": "Biome config + Tailwind CSS formatter",
-  "description": "Biome is a fast, modern tool for linting and formatting JavaScript, TypeScript, and more.",
   "ready": true,
   "languages": ["javascript", "typescript"],
   "baseTemplate": "nextjs",

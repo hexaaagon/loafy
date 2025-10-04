@@ -2,7 +2,6 @@
   "id": "nextjs-prettier-tailwind",
   "appUuid": "247778c6-ac2c-4483-a0f4-81a34d06c248",
   "title": "Prettier config + Tailwind CSS formatter",
-  "description": "Prettier plugin for sorting Tailwind CSS classes",
   "ready": true,
   "languages": ["javascript", "typescript"],
   "baseTemplate": "nextjs",

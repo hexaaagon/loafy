@@ -1,7 +1,5 @@
 {
   "id": "category-set-name",
   "title": "Category Set Display Name",
-  "description": "Description of this category set (e.g., web development categories)",
-  "version": "0.1.0",
   "frameworks": ["nextjs", "react", "vue"]
 }

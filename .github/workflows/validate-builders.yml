@@ -83,7 +83,7 @@ jobs:
             fi
             
             # Check required fields in config.json
-            local required_fields=("id" "title" "description" "ready")
+            local required_fields=("id" "title" "ready")
             for field in "${required_fields[@]}"; do
               if ! jq -e "has(\"$field\")" "$pkg_dir/config.json" > /dev/null 2>&1; then
                 echo "  ❌ Missing required field: $field"

@@ -1,8 +1,6 @@
 {
   "id": "expo-app",
   "title": "Expo App",
-  "description": "Cross-platform React Native application with Expo SDK",
   "ready": false,
-  "conflict": [],
-  "version": "0.1.0"
+  "conflict": []
 }

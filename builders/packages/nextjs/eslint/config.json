@@ -2,7 +2,6 @@
   "id": "nextjs-eslint",
   "appUuid": "f6388e76-f4ea-4dd1-8363-196328a6630a",
   "title": "ESLint",
-  "description": "ESLint is a popular tool for identifying and fixing problems in JavaScript and TypeScript code.",
   "ready": true,
   "languages": ["javascript", "typescript"],
   "baseTemplate": "nextjs",

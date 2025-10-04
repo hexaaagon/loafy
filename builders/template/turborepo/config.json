@@ -2,9 +2,7 @@
   "id": "turborepo-monorepo",
   "uuid": "a674a07f-c6f4-4c72-a848-c9c690b1154c",
   "title": "Turborepo Monorepo",
-  "description": "Monorepo setup using Turborepo",
   "ready": false,
   "conflict": [],
-  "version": "0.1.0",
   "languages": ["javascript", "typescript"]
 }
