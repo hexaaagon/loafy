@@ -6,13 +6,13 @@
   </picture>
 </div>
 
-<h1 align="center">Loafy - Next.js Biome Add-On</h1>
+<h1 align="center">Loafy - Expo Builder (Coming Soon)</h1>
 
 > If you landed here by mistake, this is not the main Loafy package. For the core Loafy tool, please visit [Loafy on npm](https://npmjs.com/package/loafy).
 
-## What is a Package Add-On?
+## What is a Builder?
 
-A **package add-on** in Loafy is a dependency that can be used as a service in your project templates, such as `better-auth`, `drizzle-orm`, and more. Add-ons extend Loafy’s capabilities by integrating popular libraries and services into your project setup.
+A **builder** in Loafy is a complete template containing the code and configuration for a specific framework, such as Next.js, Turborepo, or Expo. Builders provide ready-to-use project structures, helping you quickly scaffold applications with best practices and recommended setups for each framework.
 
 ## Why is this Split from the Main Package?
 

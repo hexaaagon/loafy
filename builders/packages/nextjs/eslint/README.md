@@ -6,7 +6,7 @@
   </picture>
 </div>
 
-<h1 align="center">Loafy - Next.js Biome Add-On</h1>
+<h1 align="center">Loafy - Next.js ESLint Add-On</h1>
 
 > If you landed here by mistake, this is not the main Loafy package. For the core Loafy tool, please visit [Loafy on npm](https://npmjs.com/package/loafy).
 

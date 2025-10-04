@@ -1,50 +1,21 @@
-# Package Addon Template
+> **See [GitHub](https://github.com/hexaaagon/loafy) for more info, documentation, and updates.**
 
-This is a template scaffold for creating package add-ons in Loafy CLI.
+<div align="middle">
+  <picture>
+    <img src="https://raw.githubusercontent.com/hexaaagon/loafy/refs/heads/main/.github/assets/loafy.png" alt="Loafy Logo" height="128" width="128" />
+  </picture>
+</div>
 
-## Instructions
+<h1 align="center">Loafy - Next.js Prettier + TailwindCSS Add-On</h1>
 
-1. **Copy this folder**: Create a new folder in `builders/packages/` with your package name
-2. **Update config.json**:
-   - Change `id` to match the base framework + package name (e.g., "nextjs-auth")
-   - Set `appUuid` to match the base template's UUID
-   - Update `title` and `description`
-   - Set appropriate `category`: `database`, `authentication`, `linting-formatting`, or `extras`
-   - Configure `conflict` array with conflicting package IDs
-   - Configure `needed` array with required categories (e.g., ["database"] for auth)
-   - Set `baseTemplate` to the framework this package works with
-   - Set `ready: true` when complete
-3. **Update package.json**:
-   - Change the `name` to `@loafy/framework-package-name`
-   - Update description and keywords
-4. **Add template files**:
-   - Add configuration files, source code, etc. to `templates/js/` and `templates/ts/`
-   - Use `_package.json` to define dependencies that will be merged into the main project
-   - Add any framework-specific integration files
+> If you landed here by mistake, this is not the main Loafy package. For the core Loafy tool, please visit [Loafy on npm](https://npmjs.com/package/loafy).
 
-## Categories
-- `database`: Database connections, ORMs (Drizzle, Prisma, etc.)
-- `authentication`: Auth libraries (NextAuth, Better Auth, etc.)
-- `linting-formatting`: Code quality tools (ESLint, Prettier, etc.)
-- `extras`: Other utilities and integrations
+## What is a Package Add-On?
 
-## Dependencies
-- `conflict`: Array of package IDs that cannot be used with this package
-- `needed`: Array of category names that must be selected before this package appears
-- `baseTemplate`: The framework this package is designed for
+A **package add-on** in Loafy is a dependency that can be used as a service in your project templates, such as `better-auth`, `drizzle-orm`, and more. Add-ons extend Loafy’s capabilities by integrating popular libraries and services into your project setup.
 
-## Example Structure
-```
-nextjs-auth/
-├── config.json          # Package configuration  
-├── package.json          # Package metadata
-└── templates/
-    ├── js/              # JavaScript variant
-    │   ├── _package.json # Dependencies to merge
-    │   ├── config.js    # Package files
-    │   └── ...
-    └── ts/              # TypeScript variant
-        ├── _package.json # Dependencies to merge  
-        ├── config.ts    # Package files
-        └── ...
-```
+## Why is this Split from the Main Package?
+
+Package add-ons are published separately from the main `loafy` npm package to keep the bundle size minimal. This modular approach ensures you only install what you need. For example, if you only want to set up Next.js, you won’t get unnecessary dependencies like Expo or Turborepo, which would otherwise triple the bundle size.
+
+This separation helps optimize resource usage, making your project setup lean and efficient.

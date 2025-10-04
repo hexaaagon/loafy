@@ -1,5 +1,6 @@
-> [!WARNING]
-**Loafy is currently in beta.** This project has only been under development for 5 days, so you may experience rapid changes and potential instability.
+> **Loafy is currently in beta.** This project has only been under development for 5 days, so you may experience rapid changes and potential instability.
+
+> **See [GitHub](https://github.com/hexaaagon/loafy) for more info, documentation, and updates.**
 
 <div align="middle">
   <picture>
@@ -20,33 +21,16 @@
 - **🎨 Best Practices**: Generated projects follow industry standards and best practices
 - **🔒 Type-Safe**: Full TypeScript support with proper type definitions
 
-### Integrations
-
-**Linting & Formatting**
-- [x] ESLint with recommended configurations
-- [x] Biome for ultra-fast linting and formatting
-- [x] Prettier with Tailwind CSS plugin
-
-**Authentication**
-- [ ] Better Auth for modern authentication
-- [ ] Supabase Auth integration
-
-**Database & ORM**
-- [ ] Drizzle ORM with PostgreSQL
-- [ ] Drizzle ORM with Supabase
-- [ ] Supabase database integration
-
-**Frameworks**
-- [x] Next.js App Router with TypeScript/~~JavaScript~~ support
-- [ ] Expo for React Native development
-- More frameworks coming soon!
-
 ## Quick Start
 
 ### Using npx (Recommended)
 
 ```bash
 npx create-loafy@latest my-app
+
+# or...
+
+bun create loafy@latest my-app
 ```
 
 ### Using global installation
@@ -82,30 +66,6 @@ npx create-loafy@latest my-app
    # or
    bun dev
    ```
-
-## Development
-
-### Local Testing (No Publishing Required)
-
-For contributors and maintainers who want to test changes without publishing:
-
-```bash
-# Build the CLI
-pnpm build
-
-# Test locally with npm scripts
-pnpm test:init          # Test interactively
-pnpm test:init:verbose  # Test with debug output
-
-# Or use the PowerShell test script
-.\test-local.ps1 -Verbose
-```
-
-See [TESTING.md](./TESTING.md) for detailed development and testing workflows.
-
-## Contributing
-
-Keen on enhancing Loafy? Contributions, bug reports, and feature requests are always welcome. Feel free to open an issue or submit a pull request.
 
 ## Special Thanks to
 

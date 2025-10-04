@@ -6,13 +6,13 @@
   </picture>
 </div>
 
-<h1 align="center">Loafy - Next.js Biome Add-On</h1>
+<h1 align="center">Loafy - Web Category</h1>
 
 > If you landed here by mistake, this is not the main Loafy package. For the core Loafy tool, please visit [Loafy on npm](https://npmjs.com/package/loafy).
 
-## What is a Package Add-On?
+## What is Category in Loafy?
 
-A **package add-on** in Loafy is a dependency that can be used as a service in your project templates, such as `better-auth`, `drizzle-orm`, and more. Add-ons extend Loafy’s capabilities by integrating popular libraries and services into your project setup.
+A **Category** in Loafy is used by the Loafy CLI to determine which setup questions to ask and which builder addons to include during project initialization. Categories help organize the setup process by grouping related questions and topics, making it easier to tailor the project configuration to your needs.
 
 ## Why is this Split from the Main Package?
 

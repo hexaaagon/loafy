@@ -1,39 +1,21 @@
-# Template Framework
+> **See [GitHub](https://github.com/hexaaagon/loafy) for more info, documentation, and updates.**
 
-This is a template scaffold for creating new framework templates in Loafy CLI.
+<div align="middle">
+  <picture>
+    <img src="https://raw.githubusercontent.com/hexaaagon/loafy/refs/heads/main/.github/assets/loafy.png" alt="Loafy Logo" height="128" width="128" />
+  </picture>
+</div>
 
-## Instructions
+<h1 align="center">Loafy - Lorem Ipsum Builder</h1>
 
-1. **Copy this folder**: Create a new folder in `builders/template/` with your framework name
-2. **Update config.json**: 
-   - Change `id` to your framework identifier
-   - Generate a new UUID for `uuid` field
-   - Update `title` and `description`
-   - Set `ready: true` when the template is complete
-3. **Update package.json**:
-   - Change the `name` to `@loafy/your-framework-name`
-   - Update description and keywords
-4. **Add template files**:
-   - Add your framework files to `templates/js/` and `templates/ts/`
-   - Use `{{config.projectName}}` placeholder for project name replacement
-   - Add all necessary configuration files, dependencies, etc.
+> If you landed here by mistake, this is not the main Loafy package. For the core Loafy tool, please visit [Loafy on npm](https://npmjs.com/package/loafy).
 
-## Example Structure
-```
-your-framework/
-├── config.json          # Framework configuration
-├── package.json          # Package metadata
-└── templates/
-    ├── js/              # JavaScript variant
-    │   ├── package.json
-    │   └── ...          # Framework files
-    └── ts/              # TypeScript variant
-        ├── package.json
-        ├── tsconfig.json
-        └── ...          # Framework files
-```
+## What is a Builder?
 
-## Notes
-- The `{{config.projectName}}` placeholder will be replaced with the actual project name
-- Both JS and TS variants should be provided
-- Add proper dependencies for your framework in the respective package.json files
+A **builder** in Loafy is a complete template containing the code and configuration for a specific framework, such as Next.js, Turborepo, or Expo. Builders provide ready-to-use project structures, helping you quickly scaffold applications with best practices and recommended setups for each framework.
+
+## Why is this Split from the Main Package?
+
+Package add-ons are published separately from the main `loafy` npm package to keep the bundle size minimal. This modular approach ensures you only install what you need. For example, if you only want to set up Next.js, you won’t get unnecessary dependencies like Expo or Turborepo, which would otherwise triple the bundle size.
+
+This separation helps optimize resource usage, making your project setup lean and efficient.

@@ -1,48 +1,21 @@
-# Category Template
+> **See [GitHub](https://github.com/hexaaagon/loafy) for more info, documentation, and updates.**
 
-This is a template scaffold for creating category definitions in Loafy CLI.
+<div align="middle">
+  <picture>
+    <img src="https://raw.githubusercontent.com/hexaaagon/loafy/refs/heads/main/.github/assets/loafy.png" alt="Loafy Logo" height="128" width="128" />
+  </picture>
+</div>
 
-## Instructions
+<h1 align="center">Loafy - Lorem Ipsum Category</h1>
 
-1. **Copy this folder**: Create a new folder in `builders/categories/` with your category set name
-2. **Update config.json**:
-   - Change `id` to your category set identifier (e.g., "web", "mobile", "desktop")
-   - Update `title` and `description`
-   - List the `frameworks` this category set applies to
-3. **Update package.json**:
-   - Change the `name` to `@loafy/categories-name`
-   - Update description
-4. **Add category files**:
-   - Create JSON files in `categories/` folder for each framework
-   - Each file should be named `{framework}.json` (e.g., `nextjs.json`, `react.json`)
-   - Define categories with proper order for display priority
+> If you landed here by mistake, this is not the main Loafy package. For the core Loafy tool, please visit [Loafy on npm](https://npmjs.com/package/loafy).
 
-## Category Structure
-Each category JSON file should contain an array of category objects:
+## What is Category in Loafy?
 
-```json
-[
-  {
-    "id": "category-id",           // Unique identifier
-    "title": "Display Name",       // User-friendly name
-    "description": "Description",  // What this category includes
-    "order": 1                     // Display order (lower = earlier)
-  }
-]
-```
+A **Category** in Loafy is used by the Loafy CLI to determine which setup questions to ask and which builder addons to include during project initialization. Categories help organize the setup process by grouping related questions and topics, making it easier to tailor the project configuration to your needs.
 
-## Common Categories
-- `linting-formatting`: ESLint, Prettier, etc.
-- `database`: Drizzle, Prisma, databases
-- `authentication`: Auth libraries
-- `state-management`: Redux, Zustand, etc.
-- `ui-components`: Component libraries
-- `testing`: Jest, Vitest, etc.
-- `deployment`: Vercel, Docker, etc.
-- `extras`: Miscellaneous utilities
+## Why is this Split from the Main Package?
 
-## Notes
-- Categories with lower `order` values appear first
-- `extras` should typically have a high order value (999)
-- Categories determine when packages appear based on dependencies
-- Each framework can have its own category definitions
+Package add-ons are published separately from the main `loafy` npm package to keep the bundle size minimal. This modular approach ensures you only install what you need. For example, if you only want to set up Next.js, you won’t get unnecessary dependencies like Expo or Turborepo, which would otherwise triple the bundle size.
+
+This separation helps optimize resource usage, making your project setup lean and efficient.
